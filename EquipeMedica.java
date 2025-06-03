@@ -1,8 +1,8 @@
 import java.time.LocalDate;
 
 public class EquipeMedica extends Pessoa {
-    private String cargo; // exemplo: "Médico", "Enfermeiro", "Técnico"
-    private String registroProfissional; // CRM, COREN etc.
+    private String cargo; 
+    private String registroProfissional; 
     private String especialidade;
 
     public EquipeMedica(String nome, LocalDate dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String cargo, String registroProfissional, String especialidade) {
