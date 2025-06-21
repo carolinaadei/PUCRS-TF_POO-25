@@ -75,7 +75,7 @@ public class App {
 
         btnCadastrar.addActionListener(e -> cadastrarPaciente());
 
-        btnEstatisticas.addActionListener(e -> Estatistica.mostrar(pacientes));
+        btnEstatisticas.addActionListener(e -> mostrarEstatisticas());
 
         btnVoltar.addActionListener(e -> {
             frame.dispose();
@@ -94,17 +94,16 @@ public class App {
             public void changedUpdate(javax.swing.event.DocumentEvent e) {
                 filtrar();
             }
-            private void filtrar() {
-                String termo = removerAcentos(campoBusca.getText());
-                ArrayList<Paciente> encontrados = new ArrayList<>();
-                for (Paciente p : pacientes) {
-                    if (removerAcentos(p.getNome()).contains(termo)) {
-                        encontrados.add(p);
+                private void filtrar() {
+                    String termo = removerAcentos(campoBusca.getText());
+                    ArrayList<Paciente> encontrados = new ArrayList<>();
+                    for (Paciente p : pacientes) {
+                        if (removerAcentos(p.getNome()).contains(termo)) {
+                            encontrados.add(p);
                     }
                 }
-                atualizarTabela(encontrados);
+                    atualizarTabela(encontrados);
             }
-
         });
     }
 
@@ -186,11 +185,76 @@ public class App {
         atualizarTabela(pacientes);
     }
 
+    private void mostrarEstatisticas() {
+        long totalPacientes = pacientes.size();
+        long totalInternados = pacientes.stream().filter(p -> p instanceof Internado).count();
+        long totalAmbulatoriais = pacientes.stream().filter(p -> p instanceof Ambulatorial).count();
+
+        int somaIdades = pacientes.stream().mapToInt(Paciente::getIdade).sum();
+        double mediaIdade = pacientes.stream().mapToInt(Paciente::getIdade).average().orElse(0);
+
+        double mediaConsultas = pacientes.stream()
+                .filter(p -> p instanceof Ambulatorial)
+                .mapToInt(p -> ((Ambulatorial) p).getQtdConsultas())
+                .average()
+                .orElse(0);
+
+        double mediaDiasInternado = pacientes.stream()
+                .filter(p -> p instanceof Internado)
+                .mapToInt(p -> ((Internado) p).getDiasInternado())
+                .average()
+                .orElse(0);
+
+        String texto = String.format(
+                "----- ESTATÍSTICAS -----\n" +
+                        "Total de pacientes: %d\n" +
+                        "Ambulatoriais: %d\n" +
+                        "Internados: %d\n" +
+                        "Soma das idades: %d\n" +
+                        "Média das idades: %.2f\n" +
+                        "Média de consultas realizadas: %.2f\n" +
+                        "Média de dias internados: %.2f\n" +
+                        "------------------------",
+                totalPacientes,
+                totalAmbulatoriais,
+                totalInternados,
+                somaIdades,
+                mediaIdade,
+                mediaConsultas,
+                mediaDiasInternado
+        );
+
+        JFrame estatFrame = new JFrame("Estatísticas dos Pacientes");
+        estatFrame.setSize(400, 300);
+        estatFrame.setLocationRelativeTo(frame);
+        estatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        estatFrame.setLayout(new BorderLayout());
+
+        JTextArea areaTexto = new JTextArea(texto);
+        areaTexto.setEditable(false);
+        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        estatFrame.add(new JScrollPane(areaTexto), BorderLayout.CENTER);
+
+        JButton btnFechar = new JButton("Fechar");
+        btnFechar.addActionListener(e -> estatFrame.dispose());
+
+        JButton btnVoltar = new JButton("⤶");
+        btnVoltar.addActionListener(e -> estatFrame.dispose());
+
+        JPanel painelBotao = new JPanel();
+        painelBotao.add(btnFechar);
+        painelBotao.add(btnVoltar);
+        estatFrame.add(painelBotao, BorderLayout.SOUTH);
+
+        estatFrame.setVisible(true);
+    }
+
     public void iniciarTecnica() {
-        frame = new JFrame("Sistema de Pacientes");
+        frame = new JFrame("Sistema técnico");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
         frame.setLayout(new BorderLayout());
+
 
     }
 }

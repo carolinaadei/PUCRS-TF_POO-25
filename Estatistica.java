@@ -10,26 +10,26 @@ public class Estatistica {
         int somaIdades = pacientes.stream().mapToInt(Paciente::getIdade).sum();
         double mediaIdade = pacientes.stream().mapToInt(Paciente::getIdade).average().orElse(0);
 
-        int totalConsultas = pacientes.stream()
+        double mediaConsultas = pacientes.stream()
                 .filter(p -> p instanceof Ambulatorial)
-                .map(p -> (Ambulatorial) p)
-                .mapToInt(Ambulatorial::getQtdConsultas)
-                .sum();
+                .mapToInt(p -> ((Ambulatorial) p).getQtdConsultas())
+                .average()
+                .orElse(0);
 
-        int totalDiasInternado = pacientes.stream()
+        double mediaDiasInternado = pacientes.stream()
                 .filter(p -> p instanceof Internado)
-                .map(p -> (Internado) p)
-                .mapToInt(Internado::getDiasInternado)
-                .sum();
+                .mapToInt(p -> ((Internado) p).getDiasInternado())
+                .average()
+                .orElse(0);
 
         System.out.println("----- ESTATÍSTICAS -----");
         System.out.println("Total de pacientes: " + totalPacientes);
         System.out.println("Ambulatoriais: " + totalAmbulatoriais);
         System.out.println("Internados: " + totalInternados);
         System.out.println("Soma das idades: " + somaIdades);
-        System.out.println("Média das idades: " + mediaIdade);
-        System.out.println("Total de consultas realizadas: " + totalConsultas);
-        System.out.println("Total de dias internados: " + totalDiasInternado);
+        System.out.println("Média das idades: " + String.format("%.2f", mediaIdade));
+        System.out.println("Média de consultas realizadas: " + String.format("%.2f", mediaConsultas));
+        System.out.println("Média de dias internados: " + String.format("%.2f", mediaDiasInternado));
         System.out.println("------------------------");
     }
 }

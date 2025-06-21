@@ -12,28 +12,34 @@ public class Ambulatorial extends Paciente {
     }
 
     public void setQtdConsultas(int qtdConsultas) {
+
         this.qtdConsultas = qtdConsultas;
     }
 
     public void setCustoConsulta(double custoConsulta) {
+
         this.custoConsulta = custoConsulta;
     }
 
     public int getQtdConsultas() {
+
         return qtdConsultas;
     }
 
     public double getCustoConsulta() {
+
         return custoConsulta;
     }
 
     @Override
     public String getTipo() {
+
         return "Ambulatorial";
     }
 
     @Override
     public double getCustoTotal() {
+
         return qtdConsultas * custoConsulta;
     }
 }
