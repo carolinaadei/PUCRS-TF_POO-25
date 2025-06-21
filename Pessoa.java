@@ -1,8 +1,6 @@
-import java.time.LocalDate;
-
 public abstract class Pessoa {
     private String nome;
-    private LocalDate dataNasc;
+    private String dataNasc;
     private int idade;
     private String cpf;
     private char sexo;
@@ -10,7 +8,7 @@ public abstract class Pessoa {
     private String endereco;
     private String telefone;
 
-    public Pessoa(String nome, LocalDate dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone) {
+    public Pessoa(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone) {
         this.nome = nome;
         this.dataNasc = dataNasc;
         this.idade = idade;
@@ -21,58 +19,69 @@ public abstract class Pessoa {
         this.telefone = telefone;
     }
 
-
-    //setters
     public void setNome(String nome) {
         this.nome = nome;
     }
-    public void setDataNasc(LocalDate dataNasc) {
+
+    public void setDataNasc(String dataNasc) {
         this.dataNasc = dataNasc;
     }
+
     public void setIdade(int idade) {
         this.idade = idade;
     }
+
     public void setCpf(String cpf) {
         this.cpf = cpf;
     }
+
     public void setSexo(char sexo) {
         this.sexo = sexo;
     }
+
     public void setEmail(String email) {
         this.email = email;
     }
+
     public void setEndereco(String endereco) {
         this.endereco = endereco;
     }
+
     public void setTelefone(String telefone) {
         this.telefone = telefone;
     }
 
-    //getters
     public String getNome() {
         return nome;
     }
-    public LocalDate getDataNasc() {
+
+    public String getDataNasc() {
         return dataNasc;
     }
+
     public int getIdade() {
         return idade;
     }
+
     public String getCpf() {
         return cpf;
     }
+
     public char getSexo() {
         return sexo;
     }
+
     public String getEmail() {
         return email;
     }
+
     public String getEndereco() {
         return endereco;
     }
+
     public String getTelefone() {
         return telefone;
     }
 
-    public abstract String getTipo();
+    public abstract getTipo();
 }
