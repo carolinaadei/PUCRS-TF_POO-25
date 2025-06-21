@@ -2,8 +2,8 @@ public class Internado extends Paciente {
     private int diasInternado;
     private double custoDiario;
 
-    public Internado(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String diagnostico, int diasInternado, double custoDiario) {
-        super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico);
+    public Internado(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String diagnostico, String responsavel, int diasInternado, double custoDiario) {
+        super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel);
         this.diasInternado = diasInternado;
         this.custoDiario = custoDiario;
     }

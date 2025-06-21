@@ -83,5 +83,5 @@ public abstract class Pessoa {
         return telefone;
     }
 
-    public abstract getTipo();
+    public abstract String getTipo();
 }

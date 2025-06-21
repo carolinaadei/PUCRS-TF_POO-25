@@ -1,4 +1,4 @@
-public class EquipeMedica extends Pessoa {
+public abstract class EquipeMedica extends Pessoa {
     private String cargo;
     private String registroProfissional;
     private String especialidade;
@@ -38,6 +38,6 @@ public class EquipeMedica extends Pessoa {
 
     @Override
     public String getTipo() {
-        return "Equipe Médica - " + cargo;
+        return "Equipe Médica: " + cargo;
     }
 }
