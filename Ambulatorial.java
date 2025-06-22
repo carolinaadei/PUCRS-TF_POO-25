@@ -4,8 +4,8 @@ public class Ambulatorial extends Paciente {
 
     public Ambulatorial(String nome, String dataNasc, int idade, String cpf, char sexo,
                         String email, String endereco, String telefone,
-                        String diagnostico, String responsavel, int qtdConsultas, double custoConsulta) {
-        super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel);
+                        String diagnostico, String responsavel, String nomeItem, int qtdConsultas, double custoConsulta) {
+        super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem);
         this.qtdConsultas = qtdConsultas;
         this.custoConsulta = custoConsulta;
 

@@ -9,7 +9,8 @@ import java.util.Comparator;
 public class App {
 
     private ArrayList<Paciente> pacientes = new ArrayList<>();
-    private JFrame frame;
+    private static ArrayList<EquipeMedica> listaEquipe = new ArrayList<>();
+    private static JFrame frame;
     private JTable tabela;
     private DefaultTableModel modeloTabela;
 
@@ -42,17 +43,22 @@ public class App {
         escolhaFrame.setVisible(true);
     }
 
-    public void iniciarPrincipal() {
-        pacientes.add(new Ambulatorial("João Diniz", "01/01/1990", 30, "12345678900", 'M', "joao@mail.com", "Rua A", "1111-2222", "Gripe", "Dra. Cecília Brandão", 1, 150));
-        pacientes.add(new Internado("Maria Bastos", "02/02/1985", 40, "98765432100", 'F', "maria@mail.com", "Rua B", "3333-4444", "Pneumonia", "Dr. Benjamin Rocha", 10, 550));
+    private void inicializarPacientes() {
+        if (pacientes.isEmpty()) {
+            pacientes.add(new Ambulatorial("João Diniz", "01/01/1990", 30, "12345678900", 'M', "joao@mail.com", "Rua A", "1111-2222", "Gripe", "Dra. Cecília Brandão - Médico", " ", 1, 150.0));
+            pacientes.add(new Internado("Maria Bastos", "02/02/1985", 40, "98765432100", 'F', "maria@mail.com", "Rua B", "3333-4444", "Pneumonia", "Dr. Benjamin Rocha - Médico", " ", 5, 600.0));
+        }
+    }
 
+    public void iniciarPrincipal() {
+        inicializarPacientes();
 
         frame = new JFrame("Sistema de Pacientes");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
         frame.setLayout(new BorderLayout());
 
-        modeloTabela = new DefaultTableModel(new String[]{"Nome", "Idade", "Tipo", "Diagnostico", "Detalhe", "Responsável"}, 0);
+        modeloTabela = new DefaultTableModel(new String[]{"Nome", "Idade", "Tipo", "Diagnostico", "Detalhe", "Responsável", "Custo Total"}, 0);
         tabela = new JTable(modeloTabela);
         JScrollPane scrollPane = new JScrollPane(tabela);
         frame.add(scrollPane, BorderLayout.CENTER);
@@ -88,21 +94,24 @@ public class App {
             public void insertUpdate(javax.swing.event.DocumentEvent e) {
                 filtrar();
             }
+
             public void removeUpdate(javax.swing.event.DocumentEvent e) {
                 filtrar();
             }
+
             public void changedUpdate(javax.swing.event.DocumentEvent e) {
                 filtrar();
             }
-                private void filtrar() {
-                    String termo = removerAcentos(campoBusca.getText());
-                    ArrayList<Paciente> encontrados = new ArrayList<>();
-                    for (Paciente p : pacientes) {
-                        if (removerAcentos(p.getNome()).contains(termo)) {
-                            encontrados.add(p);
+
+            private void filtrar() {
+                String termo = removerAcentos(campoBusca.getText());
+                ArrayList<Paciente> encontrados = new ArrayList<>();
+                for (Paciente p : pacientes) {
+                    if (removerAcentos(p.getNome()).contains(termo)) {
+                        encontrados.add(p);
                     }
                 }
-                    atualizarTabela(encontrados);
+                atualizarTabela(encontrados);
             }
         });
     }
@@ -120,7 +129,7 @@ public class App {
             String detalhe = (p instanceof Internado)
                     ? ((Internado) p).getDiasInternado() + " dias"
                     : ((Ambulatorial) p).getQtdConsultas() + " consultas";
-            modeloTabela.addRow(new Object[]{p.getNome(), p.getIdade(), tipo, p.getDiagnostico(), detalhe, p.getResponsavel()});
+            modeloTabela.addRow(new Object[]{p.getNome(), p.getIdade(), tipo, p.getDiagnostico(), detalhe, p.getResponsavel(), String.format("R$ %.2f", p.getCustoTotal())});
         }
     }
 
@@ -150,7 +159,11 @@ public class App {
         String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
         String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
         String diagnostico = JOptionPane.showInputDialog(frame, "Diagnóstico:");
-        String responsavel = JOptionPane.showInputDialog(frame, "Médico responsável:");
+
+        String responsavel = escolherResponsavel();
+        if (responsavel == null || responsavel.trim().isEmpty()) return;
+
+        String nomeItem = JOptionPane.showInputDialog(frame, "Itens Utilizados pelo paciente: ");
 
         String[] opcoes = {"Ambulatorial", "Internado"};
         int tipo = JOptionPane.showOptionDialog(frame, "Tipo de paciente", "Tipo",
@@ -158,16 +171,16 @@ public class App {
                 null, opcoes, opcoes[0]);
 
         if (tipo == 0) {
-            int consultas;
+            int qntConsultas;
             try {
-                consultas = Integer.parseInt(JOptionPane.showInputDialog(frame, "Consultas realizadas:"));
+                qntConsultas = Integer.parseInt(JOptionPane.showInputDialog(frame, "Consultas realizadas:"));
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(frame, "Número de consultas inválido!");
                 return;
             }
 
-            double valorConsulta = Double.parseDouble(JOptionPane.showInputDialog(frame, "Valor por consulta:"));
-            pacientes.add(new Ambulatorial(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, consultas, valorConsulta));
+            double custoConsulta = Double.parseDouble(JOptionPane.showInputDialog(frame, "Valor por consulta:"));
+            pacientes.add(new Ambulatorial(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, qntConsultas, custoConsulta));
 
         } else {
             int diasInternado;
@@ -178,12 +191,41 @@ public class App {
                 return;
             }
 
-            double diaria = Double.parseDouble(JOptionPane.showInputDialog(frame, "Valor da diária:"));
-            pacientes.add(new Internado(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, diasInternado, diaria));
+            double custoDiario = Double.parseDouble(JOptionPane.showInputDialog(frame, "Valor da diária:"));
+            pacientes.add(new Internado(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, diasInternado, custoDiario));
         }
 
         atualizarTabela(pacientes);
     }
+
+    private String escolherResponsavel() {
+        if (listaEquipe.isEmpty()) {
+            listarEquipe();
+        }
+
+        String[] nomesEquipe = new String[listaEquipe.size() + 1];
+        nomesEquipe[0] = "  ";
+        for (int i = 0; i < listaEquipe.size(); i++) {
+            nomesEquipe[i + 1] = listaEquipe.get(i).getNome() + " - " + listaEquipe.get(i).getCargo();
+        }
+
+        String responsavel = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o responsável (opcional):",
+                "Responsável",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomesEquipe,
+                nomesEquipe[0]);
+
+        if (responsavel != null && responsavel.startsWith("Nenhum")) {
+            responsavel = "";
+        }
+
+        return responsavel;
+    }
+
+
 
     private void mostrarEstatisticas() {
         long totalPacientes = pacientes.size();
@@ -250,11 +292,215 @@ public class App {
     }
 
     public void iniciarTecnica() {
-        frame = new JFrame("Sistema técnico");
+        inicializarPacientes();
+
+        frame = new JFrame("Sistema Técnico");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 400);
         frame.setLayout(new BorderLayout());
 
+        modeloTabela = new DefaultTableModel(new String[]{"Paciente", "Responsável", "Diagnostico", "Itens Hospitalares"}, 0);
+        tabela = new JTable(modeloTabela);
+        JScrollPane scrollPane = new JScrollPane(tabela);
+        frame.add(scrollPane, BorderLayout.CENTER);
 
+        atualizaTabelaTecnica(pacientes, listaEquipe);
+
+        JPanel painelInferior = new JPanel();
+        JTextField campoBusca = new JTextField(15);
+        JButton btnCadastrarEquipe = new JButton("Cadastrar equipe");
+        JButton btnListarEquipe = new JButton("Listar equipe");
+        JButton btnAtribuirItens = new JButton("Atribuir Itens");
+        JButton btnVoltar = new JButton("⤶");
+
+        painelInferior.add(new JLabel("Nome:"));
+        painelInferior.add(campoBusca);
+        painelInferior.add(btnCadastrarEquipe);
+        painelInferior.add(btnListarEquipe);
+        painelInferior.add(btnAtribuirItens);
+        painelInferior.add(btnVoltar);
+
+        frame.add(painelInferior, BorderLayout.SOUTH);
+
+        btnCadastrarEquipe.addActionListener(e -> cadastrarEquipe());
+
+        btnListarEquipe.addActionListener(e -> listarEquipe());
+
+        btnAtribuirItens.addActionListener(e -> atribuirItem());
+
+        btnVoltar.addActionListener(e -> {
+            frame.dispose();
+            mostrarEscolha();
+        });
+
+        frame.setVisible(true);
+
+        campoBusca.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                filtrar();
+            }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                filtrar();
+            }
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                filtrar();
+            }
+            private void filtrar() {
+                String termo = removerAcentos(campoBusca.getText());
+                ArrayList<Paciente> encontrados = new ArrayList<>();
+                for (Paciente p : pacientes) {
+                    if (removerAcentos(p.getNome()).contains(termo)) {
+                        encontrados.add(p);
+                    }
+                }
+                atualizarTabela(encontrados);
+            }
+        });
+    }
+
+    private void atribuirItem() {
+        int linhaSelecionada = tabela.getSelectedRow();
+        if (linhaSelecionada == -1) {
+            JOptionPane.showMessageDialog(frame, "Por favor, selecione um paciente na tabela.");
+            return;
+        }
+
+        String nomePaciente = (String) modeloTabela.getValueAt(linhaSelecionada, 0);
+
+        Paciente pacienteSelecionado = null;
+        for (Paciente p : pacientes) {
+            if (p.getNome().equals(nomePaciente)) {
+                pacienteSelecionado = p;
+                break;
+            }
+        }
+
+        if (pacienteSelecionado == null) {
+            JOptionPane.showMessageDialog(frame, "Paciente não encontrado.");
+            return;
+        }
+
+        String novoItem = JOptionPane.showInputDialog(frame, "Informe o nome do item a ser atribuído:");
+
+        if (novoItem == null || novoItem.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Nenhum item foi atribuído.");
+            return;
+        }
+
+        pacienteSelecionado.setNomeItem(novoItem.trim());
+
+        atualizarTabela(pacientes);
+        JOptionPane.showMessageDialog(frame, "Item atribuído com sucesso ao paciente " + pacienteSelecionado.getNome() + ".");
+    }
+
+    private void atualizaTabelaTecnica(ArrayList<Paciente> lista, ArrayList<EquipeMedica> listaEquipe) {
+        modeloTabela.setRowCount(0);
+        for (Paciente p : lista) {
+            modeloTabela.addRow(new Object[]{ p.getNome(), p.getResponsavel(), p.getDiagnostico()});
+        }
+    }
+
+    private void cadastrarEquipe() {
+
+        String nome = JOptionPane.showInputDialog(frame, "Nome do funcionário:");
+        if (nome == null || nome.trim().isEmpty()) return;
+
+        String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
+        if (dataNasc == null || dataNasc.trim().isEmpty()) return;
+
+        int idade;
+        try {
+            idade = Integer.parseInt(JOptionPane.showInputDialog(frame, "Idade:"));
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(frame, "Idade inválida!");
+            return;
+        }
+
+        String cpf = JOptionPane.showInputDialog(frame, "CPF:");
+        if (cpf == null || cpf.trim().isEmpty()) return;
+
+        String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
+        if (sexoStr == null || sexoStr.trim().isEmpty()) return;
+        char sexo = sexoStr.toUpperCase().charAt(0);
+
+        String email = JOptionPane.showInputDialog(frame, "E-mail:");
+        String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
+        String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
+
+        String registroProfissional = JOptionPane.showInputDialog(frame, "Registro Profissional:");
+        if (registroProfissional == null || registroProfissional.trim().isEmpty()) return;
+
+        String especialidade = JOptionPane.showInputDialog(frame, "Especialidade:");
+        if (especialidade == null || especialidade.trim().isEmpty()) return;
+
+        String cargo = JOptionPane.showInputDialog(frame, "Cargo:");
+        if (cargo == null || cargo.trim().isEmpty()) return;
+
+        EquipeMedica novaEquipe = new EquipeMedica(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, registroProfissional, especialidade, cargo);
+        listaEquipe.add(novaEquipe);
+    }
+
+    private static void listarEquipe() {
+        if (listaEquipe.isEmpty()) {
+            listaEquipe.add(new EquipeMedica("Dr. Benjamin Rocha", "15/03/1980", 44, "123.456.789-00", 'M', "benjaminr@gmail.com", "Rua A, 123", "(11) 99999-1111", "Médico", "CRM 26589", "Pneumologista"));
+            listaEquipe.add(new EquipeMedica("Dra. Cecília Brandão", "05/06/1999", 26, "25698478213", 'F', "cecibrandao@gmail.com", "Rua B, 568", "(11)99925-7863", "Médico", "CRM 23697", "Geral"));
+            listaEquipe.add(new EquipeMedica("Enf. Lucas Pereira", "10/05/1990", 34, "321.654.987-00", 'M', "lucas.pereira@hospital.com", "Rua D, 321", "(11) 96666-4444", "Enfermeiro", "COREN 12345", "Enfermeiro Geral"));
+            listaEquipe.add(new EquipeMedica("Enf. Mariana Souza", "03/11/1992", 32, "654.321.987-00", 'F', "mariana.souza@hospital.com", "Rua E, 456", "(11) 95555-5555", "Enfermeiro", "COREN 54321", "Enfermeiro Pediátrico"));
+            listaEquipe.add(new EquipeMedica("Dr. Felipe Andrade", "18/08/1987", 37, "789.123.456-00", 'M', "felipe.andrade@hospital.com", "Rua F, 789", "(11) 94444-6666", "Fisioterapeuta", "CREFITO 67890", "Fisioterapia ortopédica"));
+            listaEquipe.add(new EquipeMedica("Dra. Beatriz Lima", "25/12/1982", 42, "159.753.486-00", 'F', "beatriz.lima@hospital.com", "Rua G, 101", "(11) 93333-7777", "Odontologista", "CRO 24680", "Odontologia Clínica"));
+        }
+
+        JFrame filtroFrame = new JFrame("Filtrar Equipe Médica");
+        filtroFrame.setSize(500, 400);
+        filtroFrame.setLayout(new BorderLayout());
+
+        String[] opcoes = {"Todos", "Médico", "Enfermeiro", "Outros"};
+        JComboBox<String> comboFiltro = new JComboBox<>(opcoes);
+
+        JButton btnFechar = new JButton("Fechar");
+
+        JPanel painelTopo = new JPanel();
+        painelTopo.add(new JLabel("Filtrar por cargo:"));
+        painelTopo.add(comboFiltro);
+
+        JTextArea areaTexto = new JTextArea();
+        areaTexto.setEditable(false);
+        JScrollPane scroll = new JScrollPane(areaTexto);
+
+        JPanel painelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        painelInferior.add(btnFechar);
+
+        filtroFrame.add(painelTopo, BorderLayout.NORTH);
+        filtroFrame.add(scroll, BorderLayout.CENTER);
+        filtroFrame.add(painelInferior, BorderLayout.SOUTH);
+
+        comboFiltro.addActionListener(e -> {
+            String filtro = (String) comboFiltro.getSelectedItem();
+            StringBuilder sb = new StringBuilder();
+
+            for (EquipeMedica eq : listaEquipe) {
+                boolean exibir = switch (filtro) {
+                    case "Médico" -> eq.getCargo().equalsIgnoreCase("Médico");
+                    case "Enfermeiro" -> eq.getCargo().equalsIgnoreCase("Enfermeiro");
+                    case "Outros" -> !eq.getCargo().equalsIgnoreCase("Médico") && !eq.getCargo().equalsIgnoreCase("Enfermeiro");
+                    default -> true;
+                };
+
+                if (exibir) {
+                    sb.append(eq.getNome()).append(" - ").append(eq.getEspecialidade())
+                            .append(" (").append(eq.getCargo()).append(")\n");
+                }
+            }
+
+            areaTexto.setText(sb.toString().isEmpty() ? "Nenhum membro encontrado com o filtro selecionado." : sb.toString());
+        });
+
+        btnFechar.addActionListener(e -> filtroFrame.dispose());
+
+        comboFiltro.setSelectedIndex(0);
+
+        filtroFrame.setLocationRelativeTo(frame);
+        filtroFrame.setVisible(true);
     }
 }
+

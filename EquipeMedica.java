@@ -1,4 +1,4 @@
-public abstract class EquipeMedica extends Pessoa {
+public class EquipeMedica extends Pessoa {
     private String cargo;
     private String registroProfissional;
     private String especialidade;

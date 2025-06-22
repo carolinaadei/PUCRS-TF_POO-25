@@ -1,11 +1,13 @@
 public abstract class Paciente extends Pessoa {
     private String diagnostico;
     private String responsavel;
+    private String nomeItem;
 
-    public Paciente(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String diagnostico, String responsavel) {
+    public Paciente(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String diagnostico, String responsavel, String nomeItem) {
         super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone);
         this.diagnostico = diagnostico;
         this.responsavel = responsavel;
+        this.nomeItem = nomeItem;
     }
 
     public void setDiagnostico(String diagnostico) {
@@ -16,12 +18,20 @@ public abstract class Paciente extends Pessoa {
         this.responsavel = responsavel;
     }
 
+    public void setNomeItem(String nomeItem) {
+        this.nomeItem = nomeItem;
+    }
+
     public String getDiagnostico() {
         return diagnostico;
     }
 
     public String getResponsavel() {
         return responsavel;
+    }
+
+    public String getNomeItem() {
+        return nomeItem;
     }
 
     public abstract double getCustoTotal();
