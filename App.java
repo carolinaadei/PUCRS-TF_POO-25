@@ -45,8 +45,8 @@ public class App {
 
     private void inicializarPacientes() {
         if (pacientes.isEmpty()) {
-            pacientes.add(new Ambulatorial("João Diniz", "01/01/1990", 30, "12345678900", 'M', "joao@mail.com", "Rua A", "1111-2222", "Gripe", "Dra. Cecília Brandão - Médico", " ", 1, 150.0));
-            pacientes.add(new Internado("Maria Bastos", "02/02/1985", 40, "98765432100", 'F', "maria@mail.com", "Rua B", "3333-4444", "Pneumonia", "Dr. Benjamin Rocha - Médico", " ", 5, 600.0));
+            pacientes.add(new Ambulatorial("João Diniz", "01/01/1990", 30, "12345678900", 'M', "joao@mail.com", "Rua A", "1111-2222", "Gripe", "Dra. Cecília Brandão - Médico", "Dipirona", 1, 150.0));
+            pacientes.add(new Internado("Maria Bastos", "02/02/1985", 40, "98765432100", 'F', "maria@mail.com", "Rua B", "3333-4444", "Pneumonia", "Dr. Benjamin Rocha - Médico", "Soro fisiológico", 5, 600.0));
         }
     }
 
@@ -69,7 +69,7 @@ public class App {
         JTextField campoBusca = new JTextField(15);
         JButton btnCadastrar = new JButton("Cadastrar");
         JButton btnEstatisticas = new JButton("Estatísticas");
-        JButton btnVoltar = new JButton("⤶");
+        JButton btnVoltar = new JButton("Voltar");
 
         painelInferior.add(new JLabel("Nome:"));
         painelInferior.add(campoBusca);
@@ -81,6 +81,7 @@ public class App {
 
         btnCadastrar.addActionListener(e -> cadastrarPaciente());
 
+        // CORREÇÃO: Usar o método da própria classe em vez de Estatistica.mostrar
         btnEstatisticas.addActionListener(e -> mostrarEstatisticas());
 
         btnVoltar.addActionListener(e -> {
@@ -135,35 +136,71 @@ public class App {
 
     private void cadastrarPaciente() {
         String nome = JOptionPane.showInputDialog(frame, "Nome do paciente:");
-        if (nome == null || nome.trim().isEmpty()) return;
+        if (nome == null || nome.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Nome é obrigatório!");
+            return;
+        }
 
         String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
-        if (dataNasc == null || dataNasc.trim().isEmpty()) return;
+        if (dataNasc == null || dataNasc.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Data de nascimento é obrigatória!");
+            return;
+        }
 
         int idade;
         try {
-            idade = Integer.parseInt(JOptionPane.showInputDialog(frame, "Idade:"));
+            String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
+            if (idadeStr == null || idadeStr.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Idade é obrigatória!");
+                return;
+            }
+            idade = Integer.parseInt(idadeStr);
+            if (idade < 0 || idade > 150) {
+                JOptionPane.showMessageDialog(frame, "Idade deve estar entre 0 e 150 anos!");
+                return;
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(frame, "Idade inválida!");
             return;
         }
 
         String cpf = JOptionPane.showInputDialog(frame, "CPF:");
-        if (cpf == null || cpf.trim().isEmpty()) return;
+        if (cpf == null || cpf.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "CPF é obrigatório!");
+            return;
+        }
 
         String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
-        if (sexoStr == null || sexoStr.trim().isEmpty()) return;
+        if (sexoStr == null || sexoStr.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Sexo é obrigatório!");
+            return;
+        }
         char sexo = sexoStr.toUpperCase().charAt(0);
+        if (sexo != 'M' && sexo != 'F') {
+            JOptionPane.showMessageDialog(frame, "Sexo deve ser M ou F!");
+            return;
+        }
 
         String email = JOptionPane.showInputDialog(frame, "E-mail:");
+        if (email == null) email = "";
+
         String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
+        if (endereco == null) endereco = "";
+
         String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
+        if (telefone == null) telefone = "";
+
         String diagnostico = JOptionPane.showInputDialog(frame, "Diagnóstico:");
+        if (diagnostico == null || diagnostico.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Diagnóstico é obrigatório!");
+            return;
+        }
 
         String responsavel = escolherResponsavel();
-        if (responsavel == null || responsavel.trim().isEmpty()) return;
+        if (responsavel == null) responsavel = "";
 
-        String nomeItem = JOptionPane.showInputDialog(frame, "Itens Utilizados pelo paciente: ");
+        String nomeItem = escolherItem();
+        if (nomeItem == null) nomeItem = "";
 
         String[] opcoes = {"Ambulatorial", "Internado"};
         int tipo = JOptionPane.showOptionDialog(frame, "Tipo de paciente", "Tipo",
@@ -173,29 +210,82 @@ public class App {
         if (tipo == 0) {
             int qntConsultas;
             try {
-                qntConsultas = Integer.parseInt(JOptionPane.showInputDialog(frame, "Consultas realizadas:"));
+                String consultasStr = JOptionPane.showInputDialog(frame, "Consultas realizadas:");
+                if (consultasStr == null || consultasStr.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Número de consultas é obrigatório!");
+                    return;
+                }
+                qntConsultas = Integer.parseInt(consultasStr);
+                if (qntConsultas < 0) {
+                    JOptionPane.showMessageDialog(frame, "Número de consultas não pode ser negativo!");
+                    return;
+                }
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(frame, "Número de consultas inválido!");
                 return;
             }
 
-            double custoConsulta = Double.parseDouble(JOptionPane.showInputDialog(frame, "Valor por consulta:"));
+            double custoConsulta;
+            try {
+                String custoStr = JOptionPane.showInputDialog(frame, "Valor por consulta:");
+                if (custoStr == null || custoStr.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Valor da consulta é obrigatório!");
+                    return;
+                }
+                custoConsulta = Double.parseDouble(custoStr);
+                if (custoConsulta < 0) {
+                    JOptionPane.showMessageDialog(frame, "Valor da consulta não pode ser negativo!");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(frame, "Valor da consulta inválido!");
+                return;
+            }
+
             pacientes.add(new Ambulatorial(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, qntConsultas, custoConsulta));
 
-        } else {
+        } else if (tipo == 1) {
             int diasInternado;
             try {
-                diasInternado = Integer.parseInt(JOptionPane.showInputDialog(frame, "Dias internado:"));
+                String diasStr = JOptionPane.showInputDialog(frame, "Dias internado:");
+                if (diasStr == null || diasStr.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Número de dias é obrigatório!");
+                    return;
+                }
+                diasInternado = Integer.parseInt(diasStr);
+                if (diasInternado < 0) {
+                    JOptionPane.showMessageDialog(frame, "Número de dias não pode ser negativo!");
+                    return;
+                }
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(frame, "Número de dias inválido!");
                 return;
             }
 
-            double custoDiario = Double.parseDouble(JOptionPane.showInputDialog(frame, "Valor da diária:"));
+            double custoDiario;
+            try {
+                String custoStr = JOptionPane.showInputDialog(frame, "Valor da diária:");
+                if (custoStr == null || custoStr.trim().isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Valor da diária é obrigatório!");
+                    return;
+                }
+                custoDiario = Double.parseDouble(custoStr);
+                if (custoDiario < 0) {
+                    JOptionPane.showMessageDialog(frame, "Valor da diária não pode ser negativo!");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(frame, "Valor da diária inválido!");
+                return;
+            }
+
             pacientes.add(new Internado(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, diasInternado, custoDiario));
+        } else {
+            return;
         }
 
         atualizarTabela(pacientes);
+        JOptionPane.showMessageDialog(frame, "Paciente cadastrado com sucesso!");
     }
 
     private String escolherResponsavel() {
@@ -204,7 +294,7 @@ public class App {
         }
 
         String[] nomesEquipe = new String[listaEquipe.size() + 1];
-        nomesEquipe[0] = "  ";
+        nomesEquipe[0] = "Nenhum";
         for (int i = 0; i < listaEquipe.size(); i++) {
             nomesEquipe[i + 1] = listaEquipe.get(i).getNome() + " - " + listaEquipe.get(i).getCargo();
         }
@@ -218,14 +308,12 @@ public class App {
                 nomesEquipe,
                 nomesEquipe[0]);
 
-        if (responsavel != null && responsavel.startsWith("Nenhum")) {
+        if (responsavel != null && responsavel.equals("Nenhum")) {
             responsavel = "";
         }
 
         return responsavel;
     }
-
-
 
     private void mostrarEstatisticas() {
         long totalPacientes = pacientes.size();
@@ -247,48 +335,103 @@ public class App {
                 .average()
                 .orElse(0);
 
+        // Calcular custos totais
+        double custoTotalAmbulatoriais = pacientes.stream()
+                .filter(p -> p instanceof Ambulatorial)
+                .mapToDouble(Paciente::getCustoTotal)
+                .sum();
+
+        double custoTotalInternados = pacientes.stream()
+                .filter(p -> p instanceof Internado)
+                .mapToDouble(Paciente::getCustoTotal)
+                .sum();
+
+        double custoTotalGeral = custoTotalAmbulatoriais + custoTotalInternados;
+
         String texto = String.format(
-                "----- ESTATÍSTICAS -----\n" +
+                "ESTATÍSTICAS DOS PACIENTES\n" +
+                        "GERAL\n" +
                         "Total de pacientes: %d\n" +
                         "Ambulatoriais: %d\n" +
-                        "Internados: %d\n" +
-                        "Soma das idades: %d\n" +
-                        "Média das idades: %.2f\n" +
-                        "Média de consultas realizadas: %.2f\n" +
-                        "Média de dias internados: %.2f\n" +
-                        "------------------------",
+                        "Internados: %d\n\n" +
+                        "IDADES\n" +
+                        "Soma das idades: %d anos\n" +
+                        "Média das idades: %.1f anos\n\n" +
+                        "ATENDIMENTOS\n" +
+                        "Média de consultas (ambulatoriais): %.1f\n" +
+                        "Média de dias internados: %.1f dias\n\n" +
+                        "CUSTOS\n" +
+                        "Custo total ambulatoriais: R$ %.2f\n" +
+                        "Custo total internados: R$ %.2f\n" +
+                        "Custo total geral: R$ %.2f\n" +
+                        "---------------------------------------",
                 totalPacientes,
                 totalAmbulatoriais,
                 totalInternados,
                 somaIdades,
                 mediaIdade,
                 mediaConsultas,
-                mediaDiasInternado
+                mediaDiasInternado,
+                custoTotalAmbulatoriais,
+                custoTotalInternados,
+                custoTotalGeral
         );
 
         JFrame estatFrame = new JFrame("Estatísticas dos Pacientes");
-        estatFrame.setSize(400, 300);
+        estatFrame.setSize(500, 450);
         estatFrame.setLocationRelativeTo(frame);
         estatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         estatFrame.setLayout(new BorderLayout());
 
         JTextArea areaTexto = new JTextArea(texto);
         areaTexto.setEditable(false);
-        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        estatFrame.add(new JScrollPane(areaTexto), BorderLayout.CENTER);
+        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 14));
+        areaTexto.setBackground(new Color(248, 249, 250));
+        areaTexto.setMargin(new Insets(15, 15, 15, 15));
+
+        JScrollPane scrollPane = new JScrollPane(areaTexto);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        estatFrame.add(scrollPane, BorderLayout.CENTER);
 
         JButton btnFechar = new JButton("Fechar");
+        btnFechar.setPreferredSize(new Dimension(100, 30));
         btnFechar.addActionListener(e -> estatFrame.dispose());
 
-        JButton btnVoltar = new JButton("⤶");
+        JButton btnVoltar = new JButton("⤶ Voltar");
+        btnVoltar.setPreferredSize(new Dimension(100, 30));
         btnVoltar.addActionListener(e -> estatFrame.dispose());
 
-        JPanel painelBotao = new JPanel();
-        painelBotao.add(btnFechar);
+        JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         painelBotao.add(btnVoltar);
+        painelBotao.add(btnFechar);
         estatFrame.add(painelBotao, BorderLayout.SOUTH);
 
         estatFrame.setVisible(true);
+    }
+
+    private String escolherItem() {
+        ItemHospitalar[] itens = ItemHospitalar.values();
+        String[] nomeItens = new String[itens.length + 1];
+        nomeItens[0] = "Nenhum";
+
+        for (int i = 0; i < itens.length; i++) {
+            nomeItens[i + 1] = itens[i].getNomeItem();
+        }
+
+        String item = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o item hospitalar:",
+                "Item Hospitalar",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomeItens,
+                nomeItens[0]);
+
+        if (item != null && item.equals("Nenhum")) {
+            item = "";
+        }
+
+        return item;
     }
 
     public void iniciarTecnica() {
@@ -311,7 +454,7 @@ public class App {
         JButton btnCadastrarEquipe = new JButton("Cadastrar equipe");
         JButton btnListarEquipe = new JButton("Listar equipe");
         JButton btnAtribuirItens = new JButton("Atribuir Itens");
-        JButton btnVoltar = new JButton("⤶");
+        JButton btnVoltar = new JButton("Voltar");
 
         painelInferior.add(new JLabel("Nome:"));
         painelInferior.add(campoBusca);
@@ -353,7 +496,7 @@ public class App {
                         encontrados.add(p);
                     }
                 }
-                atualizarTabela(encontrados);
+                atualizaTabelaTecnica(encontrados, listaEquipe);
             }
         });
     }
@@ -380,7 +523,7 @@ public class App {
             return;
         }
 
-        String novoItem = JOptionPane.showInputDialog(frame, "Informe o nome do item a ser atribuído:");
+        String novoItem = escolherItem();
 
         if (novoItem == null || novoItem.trim().isEmpty()) {
             JOptionPane.showMessageDialog(frame, "Nenhum item foi atribuído.");
@@ -389,55 +532,99 @@ public class App {
 
         pacienteSelecionado.setNomeItem(novoItem.trim());
 
-        atualizarTabela(pacientes);
+        atualizaTabelaTecnica(pacientes, listaEquipe);
         JOptionPane.showMessageDialog(frame, "Item atribuído com sucesso ao paciente " + pacienteSelecionado.getNome() + ".");
     }
 
     private void atualizaTabelaTecnica(ArrayList<Paciente> lista, ArrayList<EquipeMedica> listaEquipe) {
         modeloTabela.setRowCount(0);
         for (Paciente p : lista) {
-            modeloTabela.addRow(new Object[]{ p.getNome(), p.getResponsavel(), p.getDiagnostico()});
+            modeloTabela.addRow(new Object[]{
+                    p.getNome(),
+                    p.getResponsavel(),
+                    p.getDiagnostico(),
+                    p.getNomeItem()
+            });
         }
     }
 
     private void cadastrarEquipe() {
-
         String nome = JOptionPane.showInputDialog(frame, "Nome do funcionário:");
-        if (nome == null || nome.trim().isEmpty()) return;
+        if (nome == null || nome.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Nome é obrigatório!");
+            return;
+        }
 
         String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
-        if (dataNasc == null || dataNasc.trim().isEmpty()) return;
+        if (dataNasc == null || dataNasc.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Data de nascimento é obrigatória!");
+            return;
+        }
 
         int idade;
         try {
-            idade = Integer.parseInt(JOptionPane.showInputDialog(frame, "Idade:"));
+            String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
+            if (idadeStr == null || idadeStr.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Idade é obrigatória!");
+                return;
+            }
+            idade = Integer.parseInt(idadeStr);
+            if (idade < 18 || idade > 80) {
+                JOptionPane.showMessageDialog(frame, "Idade deve estar entre 18 e 80 anos!");
+                return;
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(frame, "Idade inválida!");
             return;
         }
 
         String cpf = JOptionPane.showInputDialog(frame, "CPF:");
-        if (cpf == null || cpf.trim().isEmpty()) return;
+        if (cpf == null || cpf.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "CPF é obrigatório!");
+            return;
+        }
 
         String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
-        if (sexoStr == null || sexoStr.trim().isEmpty()) return;
+        if (sexoStr == null || sexoStr.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Sexo é obrigatório!");
+            return;
+        }
         char sexo = sexoStr.toUpperCase().charAt(0);
+        if (sexo != 'M' && sexo != 'F') {
+            JOptionPane.showMessageDialog(frame, "Sexo deve ser M ou F!");
+            return;
+        }
 
         String email = JOptionPane.showInputDialog(frame, "E-mail:");
+        if (email == null) email = "";
+
         String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
+        if (endereco == null) endereco = "";
+
         String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
-
-        String registroProfissional = JOptionPane.showInputDialog(frame, "Registro Profissional:");
-        if (registroProfissional == null || registroProfissional.trim().isEmpty()) return;
-
-        String especialidade = JOptionPane.showInputDialog(frame, "Especialidade:");
-        if (especialidade == null || especialidade.trim().isEmpty()) return;
+        if (telefone == null) telefone = "";
 
         String cargo = JOptionPane.showInputDialog(frame, "Cargo:");
-        if (cargo == null || cargo.trim().isEmpty()) return;
+        if (cargo == null || cargo.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Cargo é obrigatório!");
+            return;
+        }
 
-        EquipeMedica novaEquipe = new EquipeMedica(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, registroProfissional, especialidade, cargo);
+        String registroProfissional = JOptionPane.showInputDialog(frame, "Registro Profissional:");
+        if (registroProfissional == null || registroProfissional.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Registro Profissional é obrigatório!");
+            return;
+        }
+
+        String especialidade = JOptionPane.showInputDialog(frame, "Especialidade:");
+        if (especialidade == null || especialidade.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Especialidade é obrigatória!");
+            return;
+        }
+
+        EquipeMedica novaEquipe = new EquipeMedica(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, cargo, registroProfissional, especialidade);
         listaEquipe.add(novaEquipe);
+        JOptionPane.showMessageDialog(frame, "Membro da equipe cadastrado com sucesso!");
     }
 
     private static void listarEquipe() {
@@ -503,4 +690,3 @@ public class App {
         filtroFrame.setVisible(true);
     }
 }
-

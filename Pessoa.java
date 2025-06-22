@@ -19,6 +19,7 @@ public abstract class Pessoa {
         this.telefone = telefone;
     }
 
+    // Setters
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -28,7 +29,9 @@ public abstract class Pessoa {
     }
 
     public void setIdade(int idade) {
-        this.idade = idade;
+        if (idade >= 0) {
+            this.idade = idade;
+        }
     }
 
     public void setCpf(String cpf) {
@@ -36,7 +39,9 @@ public abstract class Pessoa {
     }
 
     public void setSexo(char sexo) {
-        this.sexo = sexo;
+        if (sexo == 'M' || sexo == 'F' || sexo == 'm' || sexo == 'f') {
+            this.sexo = Character.toUpperCase(sexo);
+        }
     }
 
     public void setEmail(String email) {
@@ -51,6 +56,7 @@ public abstract class Pessoa {
         this.telefone = telefone;
     }
 
+    // Getters
     public String getNome() {
         return nome;
     }
@@ -84,4 +90,22 @@ public abstract class Pessoa {
     }
 
     public abstract String getTipo();
+
+    @Override
+    public String toString() {
+        return "Nome: " + nome + ", Idade: " + idade + ", CPF: " + cpf;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Pessoa pessoa = (Pessoa) obj;
+        return cpf != null ? cpf.equals(pessoa.cpf) : pessoa.cpf == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return cpf != null ? cpf.hashCode() : 0;
+    }
 }

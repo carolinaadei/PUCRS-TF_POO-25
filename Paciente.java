@@ -3,13 +3,16 @@ public abstract class Paciente extends Pessoa {
     private String responsavel;
     private String nomeItem;
 
-    public Paciente(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String diagnostico, String responsavel, String nomeItem) {
+    public Paciente(String nome, String dataNasc, int idade, String cpf, char sexo,
+                    String email, String endereco, String telefone, String diagnostico,
+                    String responsavel, String nomeItem) {
         super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone);
         this.diagnostico = diagnostico;
         this.responsavel = responsavel;
-        this.nomeItem = nomeItem;
+        this.nomeItem = nomeItem != null ? nomeItem : "";
     }
 
+    // Setters
     public void setDiagnostico(String diagnostico) {
         this.diagnostico = diagnostico;
     }
@@ -19,25 +22,34 @@ public abstract class Paciente extends Pessoa {
     }
 
     public void setNomeItem(String nomeItem) {
-        this.nomeItem = nomeItem;
+        this.nomeItem = nomeItem != null ? nomeItem : "";
     }
 
+    // Getters
     public String getDiagnostico() {
         return diagnostico;
     }
 
     public String getResponsavel() {
-        return responsavel;
+        return responsavel != null ? responsavel : "";
     }
 
     public String getNomeItem() {
-        return nomeItem;
+        return nomeItem != null ? nomeItem : "";
     }
 
+    // Método abstrato que deve ser implementado pelas subclasses
     public abstract double getCustoTotal();
 
     @Override
     public String getTipo() {
         return "Paciente";
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Diagnóstico: " + diagnostico +
+                ", Responsável: " + getResponsavel() +
+                ", Custo Total: R$ " + String.format("%.2f", getCustoTotal());
     }
 }
