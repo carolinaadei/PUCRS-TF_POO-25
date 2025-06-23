@@ -12,24 +12,14 @@ public class Ambulatorial extends Paciente {
         setCustoConsulta(custoConsulta);
     }
 
-    // Setters com validação
     public void setQtdConsultas(int qtdConsultas) {
-        if (qtdConsultas >= 0) {
-            this.qtdConsultas = qtdConsultas;
-        } else {
-            throw new IllegalArgumentException("Quantidade de consultas não pode ser negativa");
-        }
+        this.qtdConsultas = qtdConsultas;
     }
 
     public void setCustoConsulta(double custoConsulta) {
-        if (custoConsulta >= 0) {
-            this.custoConsulta = custoConsulta;
-        } else {
-            throw new IllegalArgumentException("Custo da consulta não pode ser negativo");
-        }
+        this.custoConsulta = custoConsulta;
     }
 
-    // Getters
     public int getQtdConsultas() {
         return qtdConsultas;
     }

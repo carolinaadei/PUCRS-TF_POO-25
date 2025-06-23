@@ -3,13 +3,12 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.Normalizer;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class App {
 
     private ArrayList<Paciente> pacientes = new ArrayList<>();
     private static ArrayList<EquipeMedica> listaEquipe = new ArrayList<>();
+    private ItemHospitalar itemHospitalar;
     private static JFrame frame;
     private JTable tabela;
     private DefaultTableModel modeloTabela;
@@ -68,20 +67,21 @@ public class App {
         JPanel painelInferior = new JPanel();
         JTextField campoBusca = new JTextField(15);
         JButton btnCadastrar = new JButton("Cadastrar");
+        JButton btnExcluir = new JButton("Excluir");
         JButton btnEstatisticas = new JButton("Estatísticas");
         JButton btnVoltar = new JButton("Voltar");
 
         painelInferior.add(new JLabel("Nome:"));
         painelInferior.add(campoBusca);
         painelInferior.add(btnCadastrar);
+        painelInferior.add(btnExcluir);
         painelInferior.add(btnEstatisticas);
         painelInferior.add(btnVoltar);
 
         frame.add(painelInferior, BorderLayout.SOUTH);
 
         btnCadastrar.addActionListener(e -> cadastrarPaciente());
-
-        // CORREÇÃO: Usar o método da própria classe em vez de Estatistica.mostrar
+        btnExcluir.addActionListener(e -> removerPaciente());
         btnEstatisticas.addActionListener(e -> mostrarEstatisticas());
 
         btnVoltar.addActionListener(e -> {
@@ -315,98 +315,114 @@ public class App {
         return responsavel;
     }
 
-    private void mostrarEstatisticas() {
-        long totalPacientes = pacientes.size();
-        long totalInternados = pacientes.stream().filter(p -> p instanceof Internado).count();
-        long totalAmbulatoriais = pacientes.stream().filter(p -> p instanceof Ambulatorial).count();
+    private void removerPaciente() {
+        if (pacientes.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Não há pacientes cadastrados para remover.",
+                    "Lista Vazia", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
 
-        int somaIdades = pacientes.stream().mapToInt(Paciente::getIdade).sum();
-        double mediaIdade = pacientes.stream().mapToInt(Paciente::getIdade).average().orElse(0);
+        String[] nomesPacientes = new String[pacientes.size()];
+        for (int i = 0; i < pacientes.size(); i++) {
+            Paciente p = pacientes.get(i);
+            String tipo = (p instanceof Internado) ? "Internado" : "Ambulatorial";
+            nomesPacientes[i] = p.getNome() + " - " + tipo + " - " + p.getDiagnostico();
+        }
 
-        double mediaConsultas = pacientes.stream()
-                .filter(p -> p instanceof Ambulatorial)
-                .mapToInt(p -> ((Ambulatorial) p).getQtdConsultas())
-                .average()
-                .orElse(0);
-
-        double mediaDiasInternado = pacientes.stream()
-                .filter(p -> p instanceof Internado)
-                .mapToInt(p -> ((Internado) p).getDiasInternado())
-                .average()
-                .orElse(0);
-
-        // Calcular custos totais
-        double custoTotalAmbulatoriais = pacientes.stream()
-                .filter(p -> p instanceof Ambulatorial)
-                .mapToDouble(Paciente::getCustoTotal)
-                .sum();
-
-        double custoTotalInternados = pacientes.stream()
-                .filter(p -> p instanceof Internado)
-                .mapToDouble(Paciente::getCustoTotal)
-                .sum();
-
-        double custoTotalGeral = custoTotalAmbulatoriais + custoTotalInternados;
-
-        String texto = String.format(
-                "ESTATÍSTICAS DOS PACIENTES\n" +
-                        "GERAL\n" +
-                        "Total de pacientes: %d\n" +
-                        "Ambulatoriais: %d\n" +
-                        "Internados: %d\n\n" +
-                        "IDADES\n" +
-                        "Soma das idades: %d anos\n" +
-                        "Média das idades: %.1f anos\n\n" +
-                        "ATENDIMENTOS\n" +
-                        "Média de consultas (ambulatoriais): %.1f\n" +
-                        "Média de dias internados: %.1f dias\n\n" +
-                        "CUSTOS\n" +
-                        "Custo total ambulatoriais: R$ %.2f\n" +
-                        "Custo total internados: R$ %.2f\n" +
-                        "Custo total geral: R$ %.2f\n" +
-                        "---------------------------------------",
-                totalPacientes,
-                totalAmbulatoriais,
-                totalInternados,
-                somaIdades,
-                mediaIdade,
-                mediaConsultas,
-                mediaDiasInternado,
-                custoTotalAmbulatoriais,
-                custoTotalInternados,
-                custoTotalGeral
+        String pacienteSelecionado = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o paciente que deseja remover:",
+                "Remover Paciente",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomesPacientes,
+                nomesPacientes[0]
         );
 
-        JFrame estatFrame = new JFrame("Estatísticas dos Pacientes");
-        estatFrame.setSize(500, 450);
-        estatFrame.setLocationRelativeTo(frame);
-        estatFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        estatFrame.setLayout(new BorderLayout());
+        if (pacienteSelecionado == null) {
+            return;
+        }
 
-        JTextArea areaTexto = new JTextArea(texto);
-        areaTexto.setEditable(false);
-        areaTexto.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        areaTexto.setBackground(new Color(248, 249, 250));
-        areaTexto.setMargin(new Insets(15, 15, 15, 15));
+        String nomeSelecionado = pacienteSelecionado.split(" - ")[0];
+        Paciente pacienteParaRemover = null;
 
-        JScrollPane scrollPane = new JScrollPane(areaTexto);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        estatFrame.add(scrollPane, BorderLayout.CENTER);
+        for (Paciente p : pacientes) {
+            if (p.getNome().equals(nomeSelecionado)) {
+                pacienteParaRemover = p;
+                break;
+            }
+        }
 
-        JButton btnFechar = new JButton("Fechar");
-        btnFechar.setPreferredSize(new Dimension(100, 30));
-        btnFechar.addActionListener(e -> estatFrame.dispose());
+        if (pacienteParaRemover != null) {
+            int confirmacao = JOptionPane.showConfirmDialog(
+                    frame,
+                    "Tem certeza que deseja remover o paciente:\n" +
+                            pacienteParaRemover.getNome() + "?\n\n" +
+                            "Esta ação não pode ser desfeita.",
+                    "Confirmar Remoção",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
 
-        JButton btnVoltar = new JButton("⤶ Voltar");
-        btnVoltar.setPreferredSize(new Dimension(100, 30));
-        btnVoltar.addActionListener(e -> estatFrame.dispose());
+            if (confirmacao == JOptionPane.YES_OPTION) {
+                pacientes.remove(pacienteParaRemover);
+                atualizarTabela(pacientes);
+                JOptionPane.showMessageDialog(frame,
+                        "Paciente " + pacienteParaRemover.getNome() + " removido com sucesso!",
+                        "Remoção Concluída",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(frame, "Erro ao localizar o paciente selecionado.",
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
-        JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        painelBotao.add(btnVoltar);
-        painelBotao.add(btnFechar);
-        estatFrame.add(painelBotao, BorderLayout.SOUTH);
+    private void mostrarEstatisticas() {
+        JFrame escolhaFrame = new JFrame("Escolha a Estatistica");
+        escolhaFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        escolhaFrame.setSize(300, 190);
+        escolhaFrame.setLayout(new FlowLayout());
 
-        estatFrame.setVisible(true);
+        JButton btnEstatisticaCusto = new JButton("Estatisticas por custo");
+        JButton btnEstatisticaDiagnostico = new JButton("Estatisticas por diagnostico");
+        JButton btnEstatisticaDetalhado = new JButton("Estatisticas detalhadas");
+        JButton btnVoltar = new JButton("Voltar");
+
+        JPanel painelBotoes = new JPanel(new GridLayout(4, 1, 0, 10));
+        painelBotoes.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        Dimension tamanhoPadrao = new Dimension(220, 30);
+
+        btnEstatisticaCusto.setPreferredSize(tamanhoPadrao);
+        btnEstatisticaDiagnostico.setPreferredSize(tamanhoPadrao);
+        btnEstatisticaDetalhado.setPreferredSize(tamanhoPadrao);
+        btnVoltar.setPreferredSize(tamanhoPadrao);
+
+        btnEstatisticaCusto.addActionListener(e -> {
+            escolhaFrame.dispose();
+            Estatistica.mostrarEstatisticasCustos(pacientes);
+        });
+
+        btnEstatisticaDiagnostico.addActionListener(e -> {
+            escolhaFrame.dispose();
+            Estatistica.mostrarEstatisticasPorDiagnostico(pacientes);
+        });
+
+        btnEstatisticaDetalhado.addActionListener(e -> {
+            escolhaFrame.dispose();
+            Estatistica.mostrar(pacientes);
+        });
+
+        btnVoltar.addActionListener(e -> {
+            escolhaFrame.dispose();
+        });
+
+        escolhaFrame.add(btnEstatisticaCusto);
+        escolhaFrame.add(btnEstatisticaDiagnostico);
+        escolhaFrame.add(btnEstatisticaDetalhado);
+        escolhaFrame.add(btnVoltar);
+        escolhaFrame.setLocationRelativeTo(null);
+        escolhaFrame.setVisible(true);
     }
 
     private String escolherItem() {
@@ -502,38 +518,280 @@ public class App {
     }
 
     private void atribuirItem() {
-        int linhaSelecionada = tabela.getSelectedRow();
-        if (linhaSelecionada == -1) {
-            JOptionPane.showMessageDialog(frame, "Por favor, selecione um paciente na tabela.");
+        JFrame escolhaFrame = new JFrame("Atribuição de itens");
+        escolhaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        escolhaFrame.setSize(300, 190);
+        escolhaFrame.setLocationRelativeTo(frame);
+        escolhaFrame.setLayout(new FlowLayout());
+
+        JButton btnAtribuirItens = new JButton("Atribuir item para paciente");
+        JButton btnListarAtribuidos = new JButton("Listar itens de um paciente");
+        JButton btnVoltar = new JButton("Voltar");
+
+        JPanel painelBotoes = new JPanel(new GridLayout(4, 1, 0, 10));
+        painelBotoes.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        Dimension tamanhoPadrao = new Dimension(220, 30);
+
+        btnAtribuirItens.setPreferredSize(tamanhoPadrao);
+        btnListarAtribuidos.setPreferredSize(tamanhoPadrao);
+        btnVoltar.setPreferredSize(tamanhoPadrao);
+
+        painelBotoes.add(btnAtribuirItens);
+        painelBotoes.add(btnListarAtribuidos);
+        painelBotoes.add(btnVoltar);
+
+        escolhaFrame.add(painelBotoes);
+
+        btnAtribuirItens.addActionListener(e -> {
+            escolhaFrame.dispose();
+            atribuirItemParaPaciente();
+        });
+
+        btnListarAtribuidos.addActionListener(e -> {
+            escolhaFrame.dispose();
+            gerenciarItensPaciente();
+        });
+
+        btnVoltar.addActionListener(e -> {
+            escolhaFrame.dispose();
+        });
+
+        escolhaFrame.setVisible(true);
+    }
+
+    private void atribuirItemParaPaciente() {
+        if (pacientes.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Nenhum paciente cadastrado.");
             return;
         }
 
-        String nomePaciente = (String) modeloTabela.getValueAt(linhaSelecionada, 0);
+        String[] nomesPacientes = pacientes.stream()
+                .map(Paciente::getNome)
+                .toArray(String[]::new);
 
-        Paciente pacienteSelecionado = null;
-        for (Paciente p : pacientes) {
-            if (p.getNome().equals(nomePaciente)) {
-                pacienteSelecionado = p;
-                break;
-            }
-        }
+        String pacienteSelecionado = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o paciente:",
+                "Escolher Paciente",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomesPacientes,
+                nomesPacientes[0]);
 
         if (pacienteSelecionado == null) {
+            return;
+        }
+
+        Paciente paciente = pacientes.stream()
+                .filter(p -> p.getNome().equals(pacienteSelecionado))
+                .findFirst()
+                .orElse(null);
+
+        if (paciente == null) {
             JOptionPane.showMessageDialog(frame, "Paciente não encontrado.");
             return;
         }
 
-        String novoItem = escolherItem();
+        ItemHospitalar[] itens = ItemHospitalar.values();
+        String[] nomeItens = new String[itens.length];
 
-        if (novoItem == null || novoItem.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Nenhum item foi atribuído.");
+        for (int i = 0; i < itens.length; i++) {
+            nomeItens[i] = itens[i].getNomeItem() + " (" + itens[i].getTipo() + ")";
+        }
+
+        String itemSelecionado = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o item hospitalar:",
+                "Escolher Item",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomeItens,
+                nomeItens[0]);
+
+        if (itemSelecionado == null) {
             return;
         }
 
-        pacienteSelecionado.setNomeItem(novoItem.trim());
+        String nomeItem = itemSelecionado.split(" \\(")[0];
+
+        String itensAtuais = paciente.getNomeItem();
+        if (!itensAtuais.isEmpty() && itensAtuais.contains(nomeItem)) {
+            JOptionPane.showMessageDialog(frame, "Este item já está atribuído ao paciente.");
+            return;
+        }
+
+        if (itensAtuais.isEmpty()) {
+            paciente.setNomeItem(nomeItem);
+        } else {
+            paciente.setNomeItem(itensAtuais + ", " + nomeItem);
+        }
 
         atualizaTabelaTecnica(pacientes, listaEquipe);
-        JOptionPane.showMessageDialog(frame, "Item atribuído com sucesso ao paciente " + pacienteSelecionado.getNome() + ".");
+        JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso ao paciente " + paciente.getNome() + ".");
+    }
+
+    private void gerenciarItensPaciente() {
+        if (pacientes.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Nenhum paciente cadastrado.");
+            return;
+        }
+
+        String[] nomesPacientes = pacientes.stream()
+                .map(Paciente::getNome)
+                .toArray(String[]::new);
+
+        String pacienteSelecionado = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o paciente:",
+                "Escolher Paciente",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomesPacientes,
+                nomesPacientes[0]);
+
+        if (pacienteSelecionado == null) {
+            return;
+        }
+
+        Paciente paciente = pacientes.stream()
+                .filter(p -> p.getNome().equals(pacienteSelecionado))
+                .findFirst()
+                .orElse(null);
+
+        if (paciente == null) {
+            JOptionPane.showMessageDialog(frame, "Paciente não encontrado.");
+            return;
+        }
+
+        exibirGerenciadorItens(paciente);
+    }
+
+    private void exibirGerenciadorItens(Paciente paciente) {
+        JFrame gerenciadorFrame = new JFrame("Gerenciar Itens - " + paciente.getNome());
+        gerenciadorFrame.setSize(500, 400);
+        gerenciadorFrame.setLocationRelativeTo(frame);
+        gerenciadorFrame.setLayout(new BorderLayout());
+
+        String itensTexto = paciente.getNomeItem();
+        String[] itensArray;
+
+        if (itensTexto.isEmpty()) {
+            itensArray = new String[]{"Nenhum item atribuído"};
+        } else {
+            itensArray = itensTexto.split(", ");
+        }
+
+        JList<String> listaItens = new JList<>(itensArray);
+        listaItens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(listaItens);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Itens Atribuídos"));
+
+        JPanel painelBotoes = new JPanel(new FlowLayout());
+        JButton btnRemover = new JButton("Remover Item Selecionado");
+        JButton btnAtribuirNovo = new JButton("Atribuir Novo Item");
+        JButton btnFechar = new JButton("Fechar");
+
+        btnRemover.addActionListener(e -> {
+            String itemSelecionado = listaItens.getSelectedValue();
+            if (itemSelecionado == null || itemSelecionado.equals("Nenhum item atribuído")) {
+                JOptionPane.showMessageDialog(gerenciadorFrame, "Selecione um item para remover.");
+                return;
+            }
+
+            int confirmacao = JOptionPane.showConfirmDialog(
+                    gerenciadorFrame,
+                    "Tem certeza que deseja remover o item '" + itemSelecionado + "'?",
+                    "Confirmar Remoção",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (confirmacao == JOptionPane.YES_OPTION) {
+                removerItemDoPaciente(paciente, itemSelecionado);
+                gerenciadorFrame.dispose();
+                exibirGerenciadorItens(paciente); // Reabrir com lista atualizada
+                atualizaTabelaTecnica(pacientes, listaEquipe);
+            }
+        });
+
+        btnAtribuirNovo.addActionListener(e -> {
+            gerenciadorFrame.dispose();
+            atribuirItemParaPacienteEspecifico(paciente);
+        });
+
+        btnFechar.addActionListener(e -> gerenciadorFrame.dispose());
+
+        painelBotoes.add(btnAtribuirNovo);
+        painelBotoes.add(btnRemover);
+        painelBotoes.add(btnFechar);
+
+        gerenciadorFrame.add(scrollPane, BorderLayout.CENTER);
+        gerenciadorFrame.add(painelBotoes, BorderLayout.SOUTH);
+
+        gerenciadorFrame.setVisible(true);
+    }
+
+    private void removerItemDoPaciente(Paciente paciente, String itemParaRemover) {
+        String itensAtuais = paciente.getNomeItem();
+
+        if (itensAtuais.isEmpty()) {
+            return;
+        }
+
+        String[] itensArray = itensAtuais.split(", ");
+        StringBuilder novosItens = new StringBuilder();
+
+        for (String item : itensArray) {
+            if (!item.equals(itemParaRemover)) {
+                if (novosItens.length() > 0) {
+                    novosItens.append(", ");
+                }
+                novosItens.append(item);
+            }
+        }
+
+        paciente.setNomeItem(novosItens.toString());
+        JOptionPane.showMessageDialog(frame, "Item '" + itemParaRemover + "' removido com sucesso.");
+    }
+
+    private void atribuirItemParaPacienteEspecifico(Paciente paciente) {
+        ItemHospitalar[] itens = ItemHospitalar.values();
+        String[] nomeItens = new String[itens.length];
+
+        for (int i = 0; i < itens.length; i++) {
+            nomeItens[i] = itens[i].getNomeItem() + " (" + itens[i].getTipo() + ")";
+        }
+
+        String itemSelecionado = (String) JOptionPane.showInputDialog(
+                frame,
+                "Selecione o item hospitalar para " + paciente.getNome() + ":",
+                "Escolher Item",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                nomeItens,
+                nomeItens[0]);
+
+        if (itemSelecionado == null) {
+            exibirGerenciadorItens(paciente);
+            return;
+        }
+
+        String nomeItem = itemSelecionado.split(" \\(")[0];
+
+        String itensAtuais = paciente.getNomeItem();
+        if (!itensAtuais.isEmpty() && itensAtuais.contains(nomeItem)) {
+            JOptionPane.showMessageDialog(frame, "Este item já está atribuído ao paciente.");
+            exibirGerenciadorItens(paciente);
+            return;
+        }
+
+        if (itensAtuais.isEmpty()) {
+            paciente.setNomeItem(nomeItem);
+        } else {
+            paciente.setNomeItem(itensAtuais + ", " + nomeItem);
+        }
+
+        atualizaTabelaTecnica(pacientes, listaEquipe);
+        JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso!");
+        exibirGerenciadorItens(paciente);
     }
 
     private void atualizaTabelaTecnica(ArrayList<Paciente> lista, ArrayList<EquipeMedica> listaEquipe) {

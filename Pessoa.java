@@ -19,7 +19,6 @@ public abstract class Pessoa {
         this.telefone = telefone;
     }
 
-    // Setters
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -56,7 +55,6 @@ public abstract class Pessoa {
         this.telefone = telefone;
     }
 
-    // Getters
     public String getNome() {
         return nome;
     }

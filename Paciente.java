@@ -12,7 +12,6 @@ public abstract class Paciente extends Pessoa {
         this.nomeItem = nomeItem != null ? nomeItem : "";
     }
 
-    // Setters
     public void setDiagnostico(String diagnostico) {
         this.diagnostico = diagnostico;
     }
@@ -25,7 +24,6 @@ public abstract class Paciente extends Pessoa {
         this.nomeItem = nomeItem != null ? nomeItem : "";
     }
 
-    // Getters
     public String getDiagnostico() {
         return diagnostico;
     }
@@ -38,7 +36,6 @@ public abstract class Paciente extends Pessoa {
         return nomeItem != null ? nomeItem : "";
     }
 
-    // Método abstrato que deve ser implementado pelas subclasses
     public abstract double getCustoTotal();
 
     @Override

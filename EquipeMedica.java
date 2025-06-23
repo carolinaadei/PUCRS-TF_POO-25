@@ -12,7 +12,6 @@ public class EquipeMedica extends Pessoa {
         this.especialidade = especialidade;
     }
 
-    // Setters
     public void setCargo(String cargo) {
         this.cargo = cargo;
     }
@@ -25,7 +24,6 @@ public class EquipeMedica extends Pessoa {
         this.especialidade = especialidade;
     }
 
-    // Getters
     public String getCargo() {
         return cargo != null ? cargo : "";
     }
@@ -49,18 +47,5 @@ public class EquipeMedica extends Pessoa {
                 ", Cargo: " + getCargo() +
                 ", Registro: " + getRegistroProfissional() +
                 ", Especialidade: " + getEspecialidade();
-    }
-
-    public boolean podeAtender(String tipoCaso) {
-        if (tipoCaso == null || tipoCaso.trim().isEmpty()) {
-            return false;
-        }
-
-        String especialidadeLower = getEspecialidade().toLowerCase();
-        String tipoLower = tipoCaso.toLowerCase();
-
-        return especialidadeLower.contains("geral") ||
-                especialidadeLower.contains(tipoLower) ||
-                getCargo().equalsIgnoreCase("Médico");
     }
 }

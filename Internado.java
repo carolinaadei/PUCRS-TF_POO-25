@@ -11,24 +11,14 @@ public class Internado extends Paciente {
         setCustoDiario(custoDiario);
     }
 
-    // Setters com validação
     public void setDiasInternado(int diasInternado) {
-        if (diasInternado >= 0) {
-            this.diasInternado = diasInternado;
-        } else {
-            throw new IllegalArgumentException("Dias internado não pode ser negativo");
-        }
+        this.diasInternado = diasInternado;
     }
 
     public void setCustoDiario(double custoDiario) {
-        if (custoDiario >= 0) {
-            this.custoDiario = custoDiario;
-        } else {
-            throw new IllegalArgumentException("Custo diário não pode ser negativo");
-        }
+        this.custoDiario = custoDiario;
     }
 
-    // Getters
     public int getDiasInternado() {
         return diasInternado;
     }

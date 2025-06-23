@@ -61,9 +61,6 @@ public class Estatistica {
         System.out.println("------------------------------------");
     }
 
-    /**
-     * Gera estatísticas por diagnóstico
-     */
     public static void mostrarEstatisticasPorDiagnostico(List<Paciente> pacientes) {
         if (pacientes == null || pacientes.isEmpty()) {
             System.out.println("Nenhum paciente cadastrado.");
@@ -80,9 +77,7 @@ public class Estatistica {
         System.out.println("----------------------------------------");
     }
 
-    /**
-     * Calcula estatísticas básicas de custos
-     */
+
     public static void mostrarEstatisticasCustos(List<Paciente> pacientes) {
         if (pacientes == null || pacientes.isEmpty()) {
             System.out.println("Nenhum paciente cadastrado.");
