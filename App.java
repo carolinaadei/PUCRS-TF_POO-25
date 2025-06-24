@@ -135,225 +135,208 @@ public class App {
     }
 
     private void cadastrarPaciente() {
-        String nome = JOptionPane.showInputDialog(frame, "Nome do paciente:");
-        if (nome == null || nome.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Nome é obrigatório!");
-            return;
-        }
-
-        String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
-        if (dataNasc == null || dataNasc.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Data de nascimento é obrigatória!");
-            return;
-        }
-
-        int idade;
         try {
-            String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
-            if (idadeStr == null || idadeStr.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Idade é obrigatória!");
-                return;
-            }
-            idade = Integer.parseInt(idadeStr);
-            if (idade < 0 || idade > 150) {
-                JOptionPane.showMessageDialog(frame, "Idade deve estar entre 0 e 150 anos!");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Idade inválida!");
-            return;
-        }
+            String nome = JOptionPane.showInputDialog(frame, "Nome do paciente:");
+            ValidadorUtil.validarCampoObrigatorio(nome, "Nome");
 
-        String cpf = JOptionPane.showInputDialog(frame, "CPF:");
-        if (cpf == null || cpf.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "CPF é obrigatório!");
-            return;
-        }
+            String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
+            ValidadorUtil.validarCampoObrigatorio(dataNasc, "Data de nascimento");
 
-        String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
-        if (sexoStr == null || sexoStr.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Sexo é obrigatório!");
-            return;
-        }
-        char sexo = sexoStr.toUpperCase().charAt(0);
-        if (sexo != 'M' && sexo != 'F') {
-            JOptionPane.showMessageDialog(frame, "Sexo deve ser M ou F!");
-            return;
-        }
-
-        String email = JOptionPane.showInputDialog(frame, "E-mail:");
-        if (email == null) email = "";
-
-        String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
-        if (endereco == null) endereco = "";
-
-        String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
-        if (telefone == null) telefone = "";
-
-        String diagnostico = JOptionPane.showInputDialog(frame, "Diagnóstico:");
-        if (diagnostico == null || diagnostico.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Diagnóstico é obrigatório!");
-            return;
-        }
-
-        String responsavel = escolherResponsavel();
-        if (responsavel == null) responsavel = "";
-
-        String nomeItem = escolherItem();
-        if (nomeItem == null) nomeItem = "";
-
-        String[] opcoes = {"Ambulatorial", "Internado"};
-        int tipo = JOptionPane.showOptionDialog(frame, "Tipo de paciente", "Tipo",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-                null, opcoes, opcoes[0]);
-
-        if (tipo == 0) {
-            int qntConsultas;
+            int idade;
             try {
-                String consultasStr = JOptionPane.showInputDialog(frame, "Consultas realizadas:");
-                if (consultasStr == null || consultasStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Número de consultas é obrigatório!");
-                    return;
-                }
-                qntConsultas = Integer.parseInt(consultasStr);
-                if (qntConsultas < 0) {
-                    JOptionPane.showMessageDialog(frame, "Número de consultas não pode ser negativo!");
-                    return;
-                }
+                String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
+                ValidadorUtil.validarCampoObrigatorio(idadeStr, "Idade");
+                idade = Integer.parseInt(idadeStr);
+                ValidadorUtil.validarIdade(idade, 0, 150);
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Número de consultas inválido!");
+                throw new ValidacaoException("Idade deve ser um número válido", "idade", null);
+            }
+
+            String cpf = JOptionPane.showInputDialog(frame, "CPF:");
+            ValidadorUtil.validarCPF(cpf);
+            
+            // Verificar se CPF já existe
+            for (Paciente p : pacientes) {
+                if (p.getCpf().equals(cpf)) {
+                    throw new PacienteException("CPF já cadastrado no sistema", CodigoErro.PAC_002.getCodigo());
+                }
+            }
+
+            String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
+            ValidadorUtil.validarCampoObrigatorio(sexoStr, "Sexo");
+            char sexo = sexoStr.toUpperCase().charAt(0);
+            if (sexo != 'M' && sexo != 'F') {
+                throw new ValidacaoException("Sexo deve ser M ou F", "sexo", sexoStr);
+            }
+
+            String email = JOptionPane.showInputDialog(frame, "E-mail:");
+            if (email == null) email = "";
+            ValidadorUtil.validarEmail(email);
+
+            String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
+            if (endereco == null) endereco = "";
+
+            String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
+            if (telefone == null) telefone = "";
+
+            String diagnostico = JOptionPane.showInputDialog(frame, "Diagnóstico:");
+            ValidadorUtil.validarCampoObrigatorio(diagnostico, "Diagnóstico");
+
+            String responsavel = escolherResponsavel();
+            if (responsavel == null) responsavel = "";
+
+            String nomeItem = escolherItem();
+            if (nomeItem == null) nomeItem = "";
+
+            String[] opcoes = {"Ambulatorial", "Internado"};
+            int tipo = JOptionPane.showOptionDialog(frame, "Tipo de paciente", "Tipo",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, opcoes, opcoes[0]);
+
+            if (tipo == 0) {
+                int qntConsultas;
+                try {
+                    String consultasStr = JOptionPane.showInputDialog(frame, "Consultas realizadas:");
+                    ValidadorUtil.validarCampoObrigatorio(consultasStr, "Número de consultas");
+                    qntConsultas = Integer.parseInt(consultasStr);
+                    if (qntConsultas < 0) {
+                        throw new ValidacaoException("Número de consultas não pode ser negativo", "consultas", consultasStr);
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidacaoException("Número de consultas deve ser um número válido", "consultas", null);
+                }
+
+                double custoConsulta;
+                try {
+                    String custoStr = JOptionPane.showInputDialog(frame, "Valor por consulta:");
+                    ValidadorUtil.validarCampoObrigatorio(custoStr, "Valor da consulta");
+                    custoConsulta = Double.parseDouble(custoStr);
+                    if (custoConsulta < 0) {
+                        throw new ValidacaoException("Valor da consulta não pode ser negativo", "custoConsulta", custoStr);
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidacaoException("Valor da consulta deve ser um número válido", "custoConsulta", null);
+                }
+
+                pacientes.add(new Ambulatorial(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, qntConsultas, custoConsulta));
+
+            } else if (tipo == 1) {
+                int diasInternado;
+                try {
+                    String diasStr = JOptionPane.showInputDialog(frame, "Dias internado:");
+                    ValidadorUtil.validarCampoObrigatorio(diasStr, "Número de dias");
+                    diasInternado = Integer.parseInt(diasStr);
+                    if (diasInternado < 0) {
+                        throw new ValidacaoException("Número de dias não pode ser negativo", "dias", diasStr);
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidacaoException("Número de dias deve ser um número válido", "dias", null);
+                }
+
+                double custoDiario;
+                try {
+                    String custoStr = JOptionPane.showInputDialog(frame, "Valor da diária:");
+                    ValidadorUtil.validarCampoObrigatorio(custoStr, "Valor da diária");
+                    custoDiario = Double.parseDouble(custoStr);
+                    if (custoDiario < 0) {
+                        throw new ValidacaoException("Valor da diária não pode ser negativo", "custoDiario", custoStr);
+                    }
+                } catch (NumberFormatException e) {
+                    throw new ValidacaoException("Valor da diária deve ser um número válido", "custoDiario", null);
+                }
+
+                pacientes.add(new Internado(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, diasInternado, custoDiario));
+            } else {
                 return;
             }
 
-            double custoConsulta;
-            try {
-                String custoStr = JOptionPane.showInputDialog(frame, "Valor por consulta:");
-                if (custoStr == null || custoStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Valor da consulta é obrigatório!");
-                    return;
-                }
-                custoConsulta = Double.parseDouble(custoStr);
-                if (custoConsulta < 0) {
-                    JOptionPane.showMessageDialog(frame, "Valor da consulta não pode ser negativo!");
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Valor da consulta inválido!");
-                return;
-            }
+            atualizarTabela(pacientes);
+            JOptionPane.showMessageDialog(frame, "Paciente cadastrado com sucesso!");
 
-            pacientes.add(new Ambulatorial(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, qntConsultas, custoConsulta));
-
-        } else if (tipo == 1) {
-            int diasInternado;
-            try {
-                String diasStr = JOptionPane.showInputDialog(frame, "Dias internado:");
-                if (diasStr == null || diasStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Número de dias é obrigatório!");
-                    return;
-                }
-                diasInternado = Integer.parseInt(diasStr);
-                if (diasInternado < 0) {
-                    JOptionPane.showMessageDialog(frame, "Número de dias não pode ser negativo!");
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Número de dias inválido!");
-                return;
-            }
-
-            double custoDiario;
-            try {
-                String custoStr = JOptionPane.showInputDialog(frame, "Valor da diária:");
-                if (custoStr == null || custoStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Valor da diária é obrigatório!");
-                    return;
-                }
-                custoDiario = Double.parseDouble(custoStr);
-                if (custoDiario < 0) {
-                    JOptionPane.showMessageDialog(frame, "Valor da diária não pode ser negativo!");
-                    return;
-                }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Valor da diária inválido!");
-                return;
-            }
-
-            pacientes.add(new Internado(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, diagnostico, responsavel, nomeItem, diasInternado, custoDiario));
-        } else {
-            return;
+        } catch (ValidacaoException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (PacienteException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new PacienteException("Erro inesperado ao cadastrar paciente: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
         }
-
-        atualizarTabela(pacientes);
-        JOptionPane.showMessageDialog(frame, "Paciente cadastrado com sucesso!");
     }
 
     private String escolherResponsavel() {
-        if (listaEquipe.isEmpty()) {
-            listarEquipe();
+        try {
+            if (listaEquipe.isEmpty()) {
+                listarEquipe();
+            }
+
+            String[] nomesEquipe = new String[listaEquipe.size() + 1];
+            nomesEquipe[0] = "Nenhum";
+            for (int i = 0; i < listaEquipe.size(); i++) {
+                nomesEquipe[i + 1] = listaEquipe.get(i).getNome() + " - " + listaEquipe.get(i).getCargo();
+            }
+
+            String responsavel = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o responsável (opcional):",
+                    "Responsável",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomesEquipe,
+                    nomesEquipe[0]);
+
+            if (responsavel != null && responsavel.equals("Nenhum")) {
+                responsavel = "";
+            }
+
+            return responsavel;
+        } catch (Exception e) {
+            EquipeMedicaException erro = new EquipeMedicaException("Erro ao carregar lista de responsáveis: " + e.getMessage(), e, CodigoErro.EQP_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
+            return "";
         }
-
-        String[] nomesEquipe = new String[listaEquipe.size() + 1];
-        nomesEquipe[0] = "Nenhum";
-        for (int i = 0; i < listaEquipe.size(); i++) {
-            nomesEquipe[i + 1] = listaEquipe.get(i).getNome() + " - " + listaEquipe.get(i).getCargo();
-        }
-
-        String responsavel = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o responsável (opcional):",
-                "Responsável",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomesEquipe,
-                nomesEquipe[0]);
-
-        if (responsavel != null && responsavel.equals("Nenhum")) {
-            responsavel = "";
-        }
-
-        return responsavel;
     }
 
     private void removerPaciente() {
-        if (pacientes.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Não há pacientes cadastrados para remover.",
-                    "Lista Vazia", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        String[] nomesPacientes = new String[pacientes.size()];
-        for (int i = 0; i < pacientes.size(); i++) {
-            Paciente p = pacientes.get(i);
-            String tipo = (p instanceof Internado) ? "Internado" : "Ambulatorial";
-            nomesPacientes[i] = p.getNome() + " - " + tipo + " - " + p.getDiagnostico();
-        }
-
-        String pacienteSelecionado = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o paciente que deseja remover:",
-                "Remover Paciente",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomesPacientes,
-                nomesPacientes[0]
-        );
-
-        if (pacienteSelecionado == null) {
-            return;
-        }
-
-        String nomeSelecionado = pacienteSelecionado.split(" - ")[0];
-        Paciente pacienteParaRemover = null;
-
-        for (Paciente p : pacientes) {
-            if (p.getNome().equals(nomeSelecionado)) {
-                pacienteParaRemover = p;
-                break;
+        try {
+            if (pacientes.isEmpty()) {
+                throw new PacienteException("Não há pacientes cadastrados para remover", CodigoErro.PAC_001.getCodigo());
             }
-        }
 
-        if (pacienteParaRemover != null) {
+            String[] nomesPacientes = new String[pacientes.size()];
+            for (int i = 0; i < pacientes.size(); i++) {
+                Paciente p = pacientes.get(i);
+                String tipo = (p instanceof Internado) ? "Internado" : "Ambulatorial";
+                nomesPacientes[i] = p.getNome() + " - " + tipo + " - " + p.getDiagnostico();
+            }
+
+            String pacienteSelecionado = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o paciente que deseja remover:",
+                    "Remover Paciente",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomesPacientes,
+                    nomesPacientes[0]
+            );
+
+            if (pacienteSelecionado == null) {
+                return;
+            }
+
+            String nomeSelecionado = pacienteSelecionado.split(" - ")[0];
+            Paciente pacienteParaRemover = null;
+
+            for (Paciente p : pacientes) {
+                if (p.getNome().equals(nomeSelecionado)) {
+                    pacienteParaRemover = p;
+                    break;
+                }
+            }
+
+            if (pacienteParaRemover == null) {
+                throw new PacienteException("Paciente não encontrado", CodigoErro.PAC_001.getCodigo());
+            }
+
             int confirmacao = JOptionPane.showConfirmDialog(
                     frame,
                     "Tem certeza que deseja remover o paciente:\n" +
@@ -372,9 +355,12 @@ public class App {
                         "Remoção Concluída",
                         JOptionPane.INFORMATION_MESSAGE);
             }
-        } else {
-            JOptionPane.showMessageDialog(frame, "Erro ao localizar o paciente selecionado.",
-                    "Erro", JOptionPane.ERROR_MESSAGE);
+
+        } catch (PacienteException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new PacienteException("Erro inesperado ao remover paciente: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
         }
     }
 
@@ -426,28 +412,34 @@ public class App {
     }
 
     private String escolherItem() {
-        ItemHospitalar[] itens = ItemHospitalar.values();
-        String[] nomeItens = new String[itens.length + 1];
-        nomeItens[0] = "Nenhum";
+        try {
+            ItemHospitalar[] itens = ItemHospitalar.values();
+            String[] nomeItens = new String[itens.length + 1];
+            nomeItens[0] = "Nenhum";
 
-        for (int i = 0; i < itens.length; i++) {
-            nomeItens[i + 1] = itens[i].getNomeItem();
+            for (int i = 0; i < itens.length; i++) {
+                nomeItens[i + 1] = itens[i].getNomeItem();
+            }
+
+            String item = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o item hospitalar:",
+                    "Item Hospitalar",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomeItens,
+                    nomeItens[0]);
+
+            if (item != null && item.equals("Nenhum")) {
+                item = "";
+            }
+
+            return item;
+        } catch (Exception e) {
+            ItemHospitalarException erro = new ItemHospitalarException("Erro ao carregar itens hospitalares: " + e.getMessage(), e, CodigoErro.ITM_003.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
+            return "";
         }
-
-        String item = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o item hospitalar:",
-                "Item Hospitalar",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomeItens,
-                nomeItens[0]);
-
-        if (item != null && item.equals("Nenhum")) {
-            item = "";
-        }
-
-        return item;
     }
 
     public void iniciarTecnica() {
@@ -560,110 +552,121 @@ public class App {
     }
 
     private void atribuirItemParaPaciente() {
-        if (pacientes.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Nenhum paciente cadastrado.");
-            return;
+        try {
+            if (pacientes.isEmpty()) {
+                throw new PacienteException("Nenhum paciente cadastrado", CodigoErro.PAC_001.getCodigo());
+            }
+
+            String[] nomesPacientes = pacientes.stream()
+                    .map(Paciente::getNome)
+                    .toArray(String[]::new);
+
+            String pacienteSelecionado = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o paciente:",
+                    "Escolher Paciente",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomesPacientes,
+                    nomesPacientes[0]);
+
+            if (pacienteSelecionado == null) {
+                return;
+            }
+
+            Paciente paciente = pacientes.stream()
+                    .filter(p -> p.getNome().equals(pacienteSelecionado))
+                    .findFirst()
+                    .orElse(null);
+
+            if (paciente == null) {
+                throw new PacienteException("Paciente não encontrado", CodigoErro.PAC_001.getCodigo());
+            }
+
+            ItemHospitalar[] itens = ItemHospitalar.values();
+            String[] nomeItens = new String[itens.length];
+
+            for (int i = 0; i < itens.length; i++) {
+                nomeItens[i] = itens[i].getNomeItem() + " (" + itens[i].getTipo() + ")";
+            }
+
+            String itemSelecionado = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o item hospitalar:",
+                    "Escolher Item",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomeItens,
+                    nomeItens[0]);
+
+            if (itemSelecionado == null) {
+                return;
+            }
+
+            String nomeItem = itemSelecionado.split(" \\(")[0];
+
+            String itensAtuais = paciente.getNomeItem();
+            if (!itensAtuais.isEmpty() && itensAtuais.contains(nomeItem)) {
+                throw new ItemHospitalarException("Este item já está atribuído ao paciente", CodigoErro.ITM_002.getCodigo());
+            }
+
+            if (itensAtuais.isEmpty()) {
+                paciente.setNomeItem(nomeItem);
+            } else {
+                paciente.setNomeItem(itensAtuais + ", " + nomeItem);
+            }
+
+            atualizaTabelaTecnica(pacientes, listaEquipe);
+            JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso ao paciente " + paciente.getNome() + ".");
+
+        } catch (PacienteException | ItemHospitalarException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new ItemHospitalarException("Erro inesperado ao atribuir item: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
         }
-
-        String[] nomesPacientes = pacientes.stream()
-                .map(Paciente::getNome)
-                .toArray(String[]::new);
-
-        String pacienteSelecionado = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o paciente:",
-                "Escolher Paciente",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomesPacientes,
-                nomesPacientes[0]);
-
-        if (pacienteSelecionado == null) {
-            return;
-        }
-
-        Paciente paciente = pacientes.stream()
-                .filter(p -> p.getNome().equals(pacienteSelecionado))
-                .findFirst()
-                .orElse(null);
-
-        if (paciente == null) {
-            JOptionPane.showMessageDialog(frame, "Paciente não encontrado.");
-            return;
-        }
-
-        ItemHospitalar[] itens = ItemHospitalar.values();
-        String[] nomeItens = new String[itens.length];
-
-        for (int i = 0; i < itens.length; i++) {
-            nomeItens[i] = itens[i].getNomeItem() + " (" + itens[i].getTipo() + ")";
-        }
-
-        String itemSelecionado = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o item hospitalar:",
-                "Escolher Item",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomeItens,
-                nomeItens[0]);
-
-        if (itemSelecionado == null) {
-            return;
-        }
-
-        String nomeItem = itemSelecionado.split(" \\(")[0];
-
-        String itensAtuais = paciente.getNomeItem();
-        if (!itensAtuais.isEmpty() && itensAtuais.contains(nomeItem)) {
-            JOptionPane.showMessageDialog(frame, "Este item já está atribuído ao paciente.");
-            return;
-        }
-
-        if (itensAtuais.isEmpty()) {
-            paciente.setNomeItem(nomeItem);
-        } else {
-            paciente.setNomeItem(itensAtuais + ", " + nomeItem);
-        }
-
-        atualizaTabelaTecnica(pacientes, listaEquipe);
-        JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso ao paciente " + paciente.getNome() + ".");
     }
 
     private void gerenciarItensPaciente() {
-        if (pacientes.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Nenhum paciente cadastrado.");
-            return;
+        try {
+            if (pacientes.isEmpty()) {
+                throw new PacienteException("Nenhum paciente cadastrado", CodigoErro.PAC_001.getCodigo());
+            }
+
+            String[] nomesPacientes = pacientes.stream()
+                    .map(Paciente::getNome)
+                    .toArray(String[]::new);
+
+            String pacienteSelecionado = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o paciente:",
+                    "Escolher Paciente",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomesPacientes,
+                    nomesPacientes[0]);
+
+            if (pacienteSelecionado == null) {
+                return;
+            }
+
+            Paciente paciente = pacientes.stream()
+                    .filter(p -> p.getNome().equals(pacienteSelecionado))
+                    .findFirst()
+                    .orElse(null);
+
+            if (paciente == null) {
+                throw new PacienteException("Paciente não encontrado", CodigoErro.PAC_001.getCodigo());
+            }
+
+            exibirGerenciadorItens(paciente);
+
+        } catch (PacienteException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new PacienteException("Erro inesperado ao gerenciar itens: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
         }
-
-        String[] nomesPacientes = pacientes.stream()
-                .map(Paciente::getNome)
-                .toArray(String[]::new);
-
-        String pacienteSelecionado = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o paciente:",
-                "Escolher Paciente",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomesPacientes,
-                nomesPacientes[0]);
-
-        if (pacienteSelecionado == null) {
-            return;
-        }
-
-        Paciente paciente = pacientes.stream()
-                .filter(p -> p.getNome().equals(pacienteSelecionado))
-                .findFirst()
-                .orElse(null);
-
-        if (paciente == null) {
-            JOptionPane.showMessageDialog(frame, "Paciente não encontrado.");
-            return;
-        }
-
-        exibirGerenciadorItens(paciente);
     }
 
     private void exibirGerenciadorItens(Paciente paciente) {
