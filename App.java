@@ -670,284 +670,438 @@ public class App {
     }
 
     private void exibirGerenciadorItens(Paciente paciente) {
-        JFrame gerenciadorFrame = new JFrame("Gerenciar Itens - " + paciente.getNome());
-        gerenciadorFrame.setSize(500, 400);
-        gerenciadorFrame.setLocationRelativeTo(frame);
-        gerenciadorFrame.setLayout(new BorderLayout());
+        try {
+            if (paciente == null) {
+                throw new PacienteException("Paciente não pode ser nulo", CodigoErro.PAC_001.getCodigo());
+            }
 
-        String itensTexto = paciente.getNomeItem();
-        String[] itensArray;
+            JFrame gerenciadorFrame = new JFrame("Gerenciar Itens - " + paciente.getNome());
+            gerenciadorFrame.setSize(500, 400);
+            gerenciadorFrame.setLocationRelativeTo(frame);
+            gerenciadorFrame.setLayout(new BorderLayout());
 
-        if (itensTexto.isEmpty()) {
-            itensArray = new String[]{"Nenhum item atribuído"};
-        } else {
-            itensArray = itensTexto.split(", ");
+            String itensTexto = paciente.getNomeItem();
+            String[] itensArray;
+
+            if (itensTexto == null || itensTexto.isEmpty()) {
+                itensArray = new String[]{"Nenhum item atribuído"};
+            } else {
+                itensArray = itensTexto.split(", ");
+            }
+
+            JList<String> listaItens = new JList<>(itensArray);
+            listaItens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            JScrollPane scrollPane = new JScrollPane(listaItens);
+            scrollPane.setBorder(BorderFactory.createTitledBorder("Itens Atribuídos"));
+
+            JPanel painelBotoes = new JPanel(new FlowLayout());
+            JButton btnRemover = new JButton("Remover Item Selecionado");
+            JButton btnAtribuirNovo = new JButton("Atribuir Novo Item");
+            JButton btnFechar = new JButton("Fechar");
+
+            btnRemover.addActionListener(e -> {
+                try {
+                    String itemSelecionado = listaItens.getSelectedValue();
+                    if (itemSelecionado == null || itemSelecionado.equals("Nenhum item atribuído")) {
+                        throw new ItemHospitalarException("Nenhum item válido selecionado para remoção", CodigoErro.ITM_003.getCodigo());
+                    }
+
+                    int confirmacao = JOptionPane.showConfirmDialog(
+                            gerenciadorFrame,
+                            "Tem certeza que deseja remover o item '" + itemSelecionado + "'?",
+                            "Confirmar Remoção",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (confirmacao == JOptionPane.YES_OPTION) {
+                        removerItemDoPaciente(paciente, itemSelecionado);
+                        gerenciadorFrame.dispose();
+                        exibirGerenciadorItens(paciente);
+                        atualizaTabelaTecnica(pacientes, listaEquipe);
+                    }
+                } catch (ItemHospitalarException ex) {
+                    LogExcecao.mostrarErroUsuario(ex, gerenciadorFrame);
+                } catch (Exception ex) {
+                    HospitalException erro = new ItemHospitalarException("Erro inesperado ao remover item: " + ex.getMessage(), ex, CodigoErro.SIS_001.getCodigo());
+                    LogExcecao.mostrarErroUsuario(erro, gerenciadorFrame);
+                }
+            });
+
+            btnAtribuirNovo.addActionListener(e -> {
+                try {
+                    gerenciadorFrame.dispose();
+                    atribuirItemParaPacienteEspecifico(paciente);
+                } catch (Exception ex) {
+                    HospitalException erro = new ItemHospitalarException("Erro ao abrir tela de atribuição: " + ex.getMessage(), ex, CodigoErro.SIS_001.getCodigo());
+                    LogExcecao.mostrarErroUsuario(erro, gerenciadorFrame);
+                }
+            });
+
+            btnFechar.addActionListener(e -> gerenciadorFrame.dispose());
+
+            painelBotoes.add(btnAtribuirNovo);
+            painelBotoes.add(btnRemover);
+            painelBotoes.add(btnFechar);
+
+            gerenciadorFrame.add(scrollPane, BorderLayout.CENTER);
+            gerenciadorFrame.add(painelBotoes, BorderLayout.SOUTH);
+
+            gerenciadorFrame.setVisible(true);
+
+        } catch (PacienteException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new PacienteException("Erro inesperado ao exibir gerenciador de itens: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
         }
-
-        JList<String> listaItens = new JList<>(itensArray);
-        listaItens.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scrollPane = new JScrollPane(listaItens);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Itens Atribuídos"));
-
-        JPanel painelBotoes = new JPanel(new FlowLayout());
-        JButton btnRemover = new JButton("Remover Item Selecionado");
-        JButton btnAtribuirNovo = new JButton("Atribuir Novo Item");
-        JButton btnFechar = new JButton("Fechar");
-
-        btnRemover.addActionListener(e -> {
-            String itemSelecionado = listaItens.getSelectedValue();
-            if (itemSelecionado == null || itemSelecionado.equals("Nenhum item atribuído")) {
-                JOptionPane.showMessageDialog(gerenciadorFrame, "Selecione um item para remover.");
-                return;
-            }
-
-            int confirmacao = JOptionPane.showConfirmDialog(
-                    gerenciadorFrame,
-                    "Tem certeza que deseja remover o item '" + itemSelecionado + "'?",
-                    "Confirmar Remoção",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (confirmacao == JOptionPane.YES_OPTION) {
-                removerItemDoPaciente(paciente, itemSelecionado);
-                gerenciadorFrame.dispose();
-                exibirGerenciadorItens(paciente); // Reabrir com lista atualizada
-                atualizaTabelaTecnica(pacientes, listaEquipe);
-            }
-        });
-
-        btnAtribuirNovo.addActionListener(e -> {
-            gerenciadorFrame.dispose();
-            atribuirItemParaPacienteEspecifico(paciente);
-        });
-
-        btnFechar.addActionListener(e -> gerenciadorFrame.dispose());
-
-        painelBotoes.add(btnAtribuirNovo);
-        painelBotoes.add(btnRemover);
-        painelBotoes.add(btnFechar);
-
-        gerenciadorFrame.add(scrollPane, BorderLayout.CENTER);
-        gerenciadorFrame.add(painelBotoes, BorderLayout.SOUTH);
-
-        gerenciadorFrame.setVisible(true);
     }
 
     private void removerItemDoPaciente(Paciente paciente, String itemParaRemover) {
-        String itensAtuais = paciente.getNomeItem();
-
-        if (itensAtuais.isEmpty()) {
-            return;
-        }
-
-        String[] itensArray = itensAtuais.split(", ");
-        StringBuilder novosItens = new StringBuilder();
-
-        for (String item : itensArray) {
-            if (!item.equals(itemParaRemover)) {
-                if (novosItens.length() > 0) {
-                    novosItens.append(", ");
-                }
-                novosItens.append(item);
+        try {
+            if (paciente == null) {
+                throw new PacienteException("Paciente não pode ser nulo", CodigoErro.PAC_001.getCodigo());
             }
-        }
 
-        paciente.setNomeItem(novosItens.toString());
-        JOptionPane.showMessageDialog(frame, "Item '" + itemParaRemover + "' removido com sucesso.");
+            if (itemParaRemover == null || itemParaRemover.trim().isEmpty()) {
+                throw new ItemHospitalarException("Item para remoção não pode ser vazio", CodigoErro.ITM_003.getCodigo());
+            }
+
+            String itensAtuais = paciente.getNomeItem();
+
+            if (itensAtuais == null || itensAtuais.isEmpty()) {
+                throw new ItemHospitalarException("Paciente não possui itens para remover", CodigoErro.ITM_001.getCodigo());
+            }
+
+            if (!itensAtuais.contains(itemParaRemover)) {
+                throw new ItemHospitalarException("Item '" + itemParaRemover + "' não encontrado na lista do paciente", CodigoErro.ITM_001.getCodigo());
+            }
+
+            String[] itensArray = itensAtuais.split(", ");
+            StringBuilder novosItens = new StringBuilder();
+
+            boolean itemEncontrado = false;
+            for (String item : itensArray) {
+                if (!item.equals(itemParaRemover)) {
+                    if (novosItens.length() > 0) {
+                        novosItens.append(", ");
+                    }
+                    novosItens.append(item);
+                } else {
+                    itemEncontrado = true;
+                }
+            }
+
+            if (!itemEncontrado) {
+                throw new ItemHospitalarException("Item não foi encontrado para remoção", CodigoErro.ITM_001.getCodigo());
+            }
+
+            paciente.setNomeItem(novosItens.toString());
+            JOptionPane.showMessageDialog(frame, "Item '" + itemParaRemover + "' removido com sucesso.");
+
+        } catch (ItemHospitalarException | PacienteException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new ItemHospitalarException("Erro inesperado ao remover item: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
+        }
     }
 
     private void atribuirItemParaPacienteEspecifico(Paciente paciente) {
-        ItemHospitalar[] itens = ItemHospitalar.values();
-        String[] nomeItens = new String[itens.length];
+        try {
+            if (paciente == null) {
+                throw new PacienteException("Paciente não pode ser nulo", CodigoErro.PAC_001.getCodigo());
+            }
 
-        for (int i = 0; i < itens.length; i++) {
-            nomeItens[i] = itens[i].getNomeItem() + " (" + itens[i].getTipo() + ")";
-        }
+            ItemHospitalar[] itens = ItemHospitalar.values();
+            if (itens.length == 0) {
+                throw new ItemHospitalarException("Nenhum item hospitalar disponível no sistema", CodigoErro.ITM_001.getCodigo());
+            }
 
-        String itemSelecionado = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o item hospitalar para " + paciente.getNome() + ":",
-                "Escolher Item",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomeItens,
-                nomeItens[0]);
+            String[] nomeItens = new String[itens.length];
 
-        if (itemSelecionado == null) {
+            for (int i = 0; i < itens.length; i++) {
+                nomeItens[i] = itens[i].getNomeItem() + " (" + itens[i].getTipo() + ")";
+            }
+
+            String itemSelecionado = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o item hospitalar para " + paciente.getNome() + ":",
+                    "Escolher Item",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomeItens,
+                    nomeItens[0]);
+
+            if (itemSelecionado == null) {
+                exibirGerenciadorItens(paciente);
+                return;
+            }
+
+            String nomeItem = itemSelecionado.split(" \\(")[0];
+
+            if (nomeItem.trim().isEmpty()) {
+                throw new ItemHospitalarException("Nome do item não pode ser vazio", CodigoErro.ITM_003.getCodigo());
+            }
+
+            String itensAtuais = paciente.getNomeItem();
+            if (itensAtuais != null && !itensAtuais.isEmpty() && itensAtuais.contains(nomeItem)) {
+                throw new ItemHospitalarException("Este item já está atribuído ao paciente", CodigoErro.ITM_002.getCodigo());
+            }
+
+            if (itensAtuais == null || itensAtuais.isEmpty()) {
+                paciente.setNomeItem(nomeItem);
+            } else {
+                paciente.setNomeItem(itensAtuais + ", " + nomeItem);
+            }
+
+            atualizaTabelaTecnica(pacientes, listaEquipe);
+            JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso!");
             exibirGerenciadorItens(paciente);
-            return;
+
+        } catch (PacienteException | ItemHospitalarException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+            if (paciente != null) {
+                exibirGerenciadorItens(paciente);
+            }
+        } catch (Exception e) {
+            HospitalException erro = new ItemHospitalarException("Erro inesperado ao atribuir item específico: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
+            if (paciente != null) {
+                exibirGerenciadorItens(paciente);
+            }
         }
-
-        String nomeItem = itemSelecionado.split(" \\(")[0];
-
-        String itensAtuais = paciente.getNomeItem();
-        if (!itensAtuais.isEmpty() && itensAtuais.contains(nomeItem)) {
-            JOptionPane.showMessageDialog(frame, "Este item já está atribuído ao paciente.");
-            exibirGerenciadorItens(paciente);
-            return;
-        }
-
-        if (itensAtuais.isEmpty()) {
-            paciente.setNomeItem(nomeItem);
-        } else {
-            paciente.setNomeItem(itensAtuais + ", " + nomeItem);
-        }
-
-        atualizaTabelaTecnica(pacientes, listaEquipe);
-        JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso!");
-        exibirGerenciadorItens(paciente);
     }
 
     private void atualizaTabelaTecnica(ArrayList<Paciente> lista, ArrayList<EquipeMedica> listaEquipe) {
-        modeloTabela.setRowCount(0);
-        for (Paciente p : lista) {
-            modeloTabela.addRow(new Object[]{
-                    p.getNome(),
-                    p.getResponsavel(),
-                    p.getDiagnostico(),
-                    p.getNomeItem()
-            });
+        try {
+            if (modeloTabela == null) {
+                throw new PacienteException("Modelo da tabela não foi inicializado", CodigoErro.SIS_001.getCodigo());
+            }
+
+            if (lista == null) {
+                throw new PacienteException("Lista de pacientes não pode ser nula", CodigoErro.PAC_001.getCodigo());
+            }
+
+            modeloTabela.setRowCount(0);
+            for (Paciente p : lista) {
+                if (p == null) {
+                    continue; 
+                }
+                
+                String responsavel = (p.getResponsavel() != null) ? p.getResponsavel() : "Não definido";
+                String diagnostico = (p.getDiagnostico() != null) ? p.getDiagnostico() : "Não informado";
+                String itens = (p.getNomeItem() != null && !p.getNomeItem().isEmpty()) ? p.getNomeItem() : "Nenhum item";
+
+                modeloTabela.addRow(new Object[]{
+                        p.getNome(),
+                        responsavel,
+                        diagnostico,
+                        itens
+                });
+            }
+
+        } catch (PacienteException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new PacienteException("Erro inesperado ao atualizar tabela técnica: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
         }
     }
 
     private void cadastrarEquipe() {
-        String nome = JOptionPane.showInputDialog(frame, "Nome do funcionário:");
-        if (nome == null || nome.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Nome é obrigatório!");
-            return;
-        }
-
-        String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
-        if (dataNasc == null || dataNasc.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Data de nascimento é obrigatória!");
-            return;
-        }
-
-        int idade;
         try {
-            String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
-            if (idadeStr == null || idadeStr.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Idade é obrigatória!");
-                return;
+            String nome = JOptionPane.showInputDialog(frame, "Nome do funcionário:");
+            ValidadorUtil.validarCampoObrigatorio(nome, "Nome");
+
+            String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
+            ValidadorUtil.validarCampoObrigatorio(dataNasc, "Data de nascimento");
+
+            int idade;
+            try {
+                String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
+                ValidadorUtil.validarCampoObrigatorio(idadeStr, "Idade");
+                idade = Integer.parseInt(idadeStr);
+                ValidadorUtil.validarIdade(idade, 18, 80);
+            } catch (NumberFormatException e) {
+                throw new ValidacaoException("Idade deve ser um número válido", "idade", null);
             }
-            idade = Integer.parseInt(idadeStr);
-            if (idade < 18 || idade > 80) {
-                JOptionPane.showMessageDialog(frame, "Idade deve estar entre 18 e 80 anos!");
-                return;
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Idade inválida!");
-            return;
-        }
 
-        String cpf = JOptionPane.showInputDialog(frame, "CPF:");
-        if (cpf == null || cpf.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "CPF é obrigatório!");
-            return;
-        }
-
-        String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
-        if (sexoStr == null || sexoStr.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Sexo é obrigatório!");
-            return;
-        }
-        char sexo = sexoStr.toUpperCase().charAt(0);
-        if (sexo != 'M' && sexo != 'F') {
-            JOptionPane.showMessageDialog(frame, "Sexo deve ser M ou F!");
-            return;
-        }
-
-        String email = JOptionPane.showInputDialog(frame, "E-mail:");
-        if (email == null) email = "";
-
-        String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
-        if (endereco == null) endereco = "";
-
-        String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
-        if (telefone == null) telefone = "";
-
-        String cargo = JOptionPane.showInputDialog(frame, "Cargo:");
-        if (cargo == null || cargo.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Cargo é obrigatório!");
-            return;
-        }
-
-        String registroProfissional = JOptionPane.showInputDialog(frame, "Registro Profissional:");
-        if (registroProfissional == null || registroProfissional.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Registro Profissional é obrigatório!");
-            return;
-        }
-
-        String especialidade = JOptionPane.showInputDialog(frame, "Especialidade:");
-        if (especialidade == null || especialidade.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Especialidade é obrigatória!");
-            return;
-        }
-
-        EquipeMedica novaEquipe = new EquipeMedica(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, cargo, registroProfissional, especialidade);
-        listaEquipe.add(novaEquipe);
-        JOptionPane.showMessageDialog(frame, "Membro da equipe cadastrado com sucesso!");
-    }
-
-    private static void listarEquipe() {
-        if (listaEquipe.isEmpty()) {
-            listaEquipe.add(new EquipeMedica("Dr. Benjamin Rocha", "15/03/1980", 44, "123.456.789-00", 'M', "benjaminr@gmail.com", "Rua A, 123", "(11) 99999-1111", "Médico", "CRM 26589", "Pneumologista"));
-            listaEquipe.add(new EquipeMedica("Dra. Cecília Brandão", "05/06/1999", 26, "25698478213", 'F', "cecibrandao@gmail.com", "Rua B, 568", "(11)99925-7863", "Médico", "CRM 23697", "Geral"));
-            listaEquipe.add(new EquipeMedica("Enf. Lucas Pereira", "10/05/1990", 34, "321.654.987-00", 'M', "lucas.pereira@hospital.com", "Rua D, 321", "(11) 96666-4444", "Enfermeiro", "COREN 12345", "Enfermeiro Geral"));
-            listaEquipe.add(new EquipeMedica("Enf. Mariana Souza", "03/11/1992", 32, "654.321.987-00", 'F', "mariana.souza@hospital.com", "Rua E, 456", "(11) 95555-5555", "Enfermeiro", "COREN 54321", "Enfermeiro Pediátrico"));
-            listaEquipe.add(new EquipeMedica("Dr. Felipe Andrade", "18/08/1987", 37, "789.123.456-00", 'M', "felipe.andrade@hospital.com", "Rua F, 789", "(11) 94444-6666", "Fisioterapeuta", "CREFITO 67890", "Fisioterapia ortopédica"));
-            listaEquipe.add(new EquipeMedica("Dra. Beatriz Lima", "25/12/1982", 42, "159.753.486-00", 'F', "beatriz.lima@hospital.com", "Rua G, 101", "(11) 93333-7777", "Odontologista", "CRO 24680", "Odontologia Clínica"));
-        }
-
-        JFrame filtroFrame = new JFrame("Filtrar Equipe Médica");
-        filtroFrame.setSize(500, 400);
-        filtroFrame.setLayout(new BorderLayout());
-
-        String[] opcoes = {"Todos", "Médico", "Enfermeiro", "Outros"};
-        JComboBox<String> comboFiltro = new JComboBox<>(opcoes);
-
-        JButton btnFechar = new JButton("Fechar");
-
-        JPanel painelTopo = new JPanel();
-        painelTopo.add(new JLabel("Filtrar por cargo:"));
-        painelTopo.add(comboFiltro);
-
-        JTextArea areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
-        JScrollPane scroll = new JScrollPane(areaTexto);
-
-        JPanel painelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        painelInferior.add(btnFechar);
-
-        filtroFrame.add(painelTopo, BorderLayout.NORTH);
-        filtroFrame.add(scroll, BorderLayout.CENTER);
-        filtroFrame.add(painelInferior, BorderLayout.SOUTH);
-
-        comboFiltro.addActionListener(e -> {
-            String filtro = (String) comboFiltro.getSelectedItem();
-            StringBuilder sb = new StringBuilder();
+            String cpf = JOptionPane.showInputDialog(frame, "CPF:");
+            ValidadorUtil.validarCPF(cpf);
 
             for (EquipeMedica eq : listaEquipe) {
-                boolean exibir = switch (filtro) {
-                    case "Médico" -> eq.getCargo().equalsIgnoreCase("Médico");
-                    case "Enfermeiro" -> eq.getCargo().equalsIgnoreCase("Enfermeiro");
-                    case "Outros" -> !eq.getCargo().equalsIgnoreCase("Médico") && !eq.getCargo().equalsIgnoreCase("Enfermeiro");
-                    default -> true;
-                };
-
-                if (exibir) {
-                    sb.append(eq.getNome()).append(" - ").append(eq.getEspecialidade())
-                            .append(" (").append(eq.getCargo()).append(")\n");
+                if (eq.getCpf().equals(cpf)) {
+                    throw new EquipeMedicaException("CPF já cadastrado na equipe médica", CodigoErro.EQP_002.getCodigo());
                 }
             }
 
-            areaTexto.setText(sb.toString().isEmpty() ? "Nenhum membro encontrado com o filtro selecionado." : sb.toString());
-        });
+            String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
+            ValidadorUtil.validarCampoObrigatorio(sexoStr, "Sexo");
+            char sexo = sexoStr.toUpperCase().charAt(0);
+            if (sexo != 'M' && sexo != 'F') {
+                throw new ValidacaoException("Sexo deve ser M ou F", "sexo", sexoStr);
+            }
 
-        btnFechar.addActionListener(e -> filtroFrame.dispose());
+            String email = JOptionPane.showInputDialog(frame, "E-mail:");
+            if (email == null) email = "";
+            ValidadorUtil.validarEmail(email);
 
-        comboFiltro.setSelectedIndex(0);
+            String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
+            if (endereco == null) endereco = "";
 
-        filtroFrame.setLocationRelativeTo(frame);
-        filtroFrame.setVisible(true);
+            String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
+            if (telefone == null) telefone = "";
+
+            String cargo = JOptionPane.showInputDialog(frame, "Cargo:");
+            ValidadorUtil.validarCampoObrigatorio(cargo, "Cargo");
+
+            String registroProfissional = JOptionPane.showInputDialog(frame, "Registro Profissional:");
+            ValidadorUtil.validarCampoObrigatorio(registroProfissional, "Registro Profissional");
+
+            for (EquipeMedica eq : listaEquipe) {
+                if (eq.getRegistroProfissional().equals(registroProfissional)) {
+                    throw new EquipeMedicaException("Registro profissional já existe no sistema", CodigoErro.EQP_002.getCodigo());
+                }
+            }
+
+            String especialidade = JOptionPane.showInputDialog(frame, "Especialidade:");
+            ValidadorUtil.validarCampoObrigatorio(especialidade, "Especialidade");
+
+            validarCargoEspecialidade(cargo, especialidade);
+
+            EquipeMedica novaEquipe = new EquipeMedica(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, cargo, registroProfissional, especialidade);
+            listaEquipe.add(novaEquipe);
+            JOptionPane.showMessageDialog(frame, "Membro da equipe cadastrado com sucesso!");
+
+        } catch (ValidacaoException | EquipeMedicaException e) {
+            LogExcecao.mostrarErroUsuario(e, frame);
+        } catch (Exception e) {
+            HospitalException erro = new EquipeMedicaException("Erro inesperado ao cadastrar membro da equipe: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            LogExcecao.mostrarErroUsuario(erro, frame);
+        }
     }
-}
+
+    private void validarCargoEspecialidade(String cargo, String especialidade) throws EquipeMedicaException {
+        if (cargo == null || especialidade == null) {
+            throw new EquipeMedicaException("Cargo e especialidade não podem ser nulos", CodigoErro.EQP_003.getCodigo());
+        }
+
+        cargo = cargo.trim().toLowerCase();
+        especialidade = especialidade.trim().toLowerCase();
+
+        switch (cargo) {
+            case "médico":
+                if (!especialidade.contains("geral") && !especialidade.contains("pediatria") && 
+                    !especialidade.contains("cardiologia") && !especialidade.contains("pneumologia") &&
+                    !especialidade.contains("neurologia") && !especialidade.contains("ortopedia")) {
+                }
+                break;
+            case "enfermeiro":
+                if (!especialidade.contains("enfermeiro") && !especialidade.contains("enfermagem")) {
+                    throw new EquipeMedicaException("Especialidade incompatível com o cargo de enfermeiro", CodigoErro.EQP_003.getCodigo());
+                }
+                break;
+            case "fisioterapeuta":
+                if (!especialidade.contains("fisioterapia")) {
+                    throw new EquipeMedicaException("Especialidade deve estar relacionada à fisioterapia", CodigoErro.EQP_003.getCodigo());
+                }
+                break;
+            case "odontologista":
+                if (!especialidade.contains("odontologia")) {
+                    throw new EquipeMedicaException("Especialidade deve estar relacionada à odontologia", CodigoErro.EQP_003.getCodigo());
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private static void listarEquipe() {
+        try {
+            if (listaEquipe.isEmpty()) {
+                listaEquipe.add(new EquipeMedica("Dr. Benjamin Rocha", "15/03/1980", 44, "123.456.789-00", 'M', "benjaminr@gmail.com", "Rua A, 123", "(11) 99999-1111", "Médico", "CRM 26589", "Pneumologista"));
+                listaEquipe.add(new EquipeMedica("Dra. Cecília Brandão", "05/06/1999", 26, "25698478213", 'F', "cecibrandao@gmail.com", "Rua B, 568", "(11)99925-7863", "Médico", "CRM 23697", "Geral"));
+                listaEquipe.add(new EquipeMedica("Enf. Lucas Pereira", "10/05/1990", 34, "321.654.987-00", 'M', "lucas.pereira@hospital.com", "Rua D, 321", "(11) 96666-4444", "Enfermeiro", "COREN 12345", "Enfermeiro Geral"));
+                listaEquipe.add(new EquipeMedica("Enf. Mariana Souza", "03/11/1992", 32, "654.321.987-00", 'F', "mariana.souza@hospital.com", "Rua E, 456", "(11) 95555-5555", "Enfermeiro", "COREN 54321", "Enfermeiro Pediátrico"));
+                listaEquipe.add(new EquipeMedica("Dr. Felipe Andrade", "18/08/1987", 37, "789.123.456-00", 'M', "felipe.andrade@hospital.com", "Rua F, 789", "(11) 94444-6666", "Fisioterapeuta", "CREFITO 67890", "Fisioterapia ortopédica"));
+                listaEquipe.add(new EquipeMedica("Dra. Beatriz Lima", "25/12/1982", 42, "159.753.486-00", 'F', "beatriz.lima@hospital.com", "Rua G, 101", "(11) 93333-7777", "Odontologista", "CRO 24680", "Odontologia Clínica"));
+            }
+
+            JFrame filtroFrame = new JFrame("Filtrar Equipe Médica");
+            filtroFrame.setSize(500, 400);
+            filtroFrame.setLayout(new BorderLayout());
+
+            String[] opcoes = {"Todos", "Médico", "Enfermeiro", "Outros"};
+            JComboBox<String> comboFiltro = new JComboBox<>(opcoes);
+
+            JButton btnFechar = new JButton("Fechar");
+
+            JPanel painelTopo = new JPanel();
+            painelTopo.add(new JLabel("Filtrar por cargo:"));
+            painelTopo.add(comboFiltro);
+
+            JTextArea areaTexto = new JTextArea();
+            areaTexto.setEditable(false);
+            JScrollPane scroll = new JScrollPane(areaTexto);
+
+            JPanel painelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            painelInferior.add(btnFechar);
+
+            filtroFrame.add(painelTopo, BorderLayout.NORTH);
+            filtroFrame.add(scroll, BorderLayout.CENTER);
+            filtroFrame.add(painelInferior, BorderLayout.SOUTH);
+
+            comboFiltro.addActionListener(e -> {
+                try {
+                    String filtro = (String) comboFiltro.getSelectedItem();
+                    if (filtro == null) {
+                        throw new EquipeMedicaException("Filtro não pode ser nulo", CodigoErro.EQP_001.getCodigo());
+                    }
+
+                    StringBuilder sb = new StringBuilder();
+
+                    for (EquipeMedica eq : listaEquipe) {
+                        if (eq == null) continue; // Pula membros nulos
+
+                        boolean exibir = switch (filtro) {
+                            case "Médico" -> eq.getCargo() != null && eq.getCargo().equalsIgnoreCase("Médico");
+                            case "Enfermeiro" -> eq.getCargo() != null && eq.getCargo().equalsIgnoreCase("Enfermeiro");
+                            case "Outros" -> eq.getCargo() != null && !eq.getCargo().equalsIgnoreCase("Médico") && !eq.getCargo().equalsIgnoreCase("Enfermeiro");
+                            default -> true;
+                        };
+
+                        if (exibir) {
+                            String nome = (eq.getNome() != null) ? eq.getNome() : "Nome não informado";
+                            String especialidade = (eq.getEspecialidade() != null) ? eq.getEspecialidade() : "Especialidade não informada";
+                            String cargo = (eq.getCargo() != null) ? eq.getCargo() : "Cargo não informado";
+                            
+                            sb.append(nome).append(" - ").append(especialidade)
+                                    .append(" (").append(cargo).append(")\n");
+                        }
+                    }
+
+                    areaTexto.setText(sb.toString().isEmpty() ? "Nenhum membro encontrado com o filtro selecionado." : sb.toString());
+
+                } catch (EquipeMedicaException ex) {
+                    LogExcecao.mostrarErroUsuario(ex, filtroFrame);
+                } catch (Exception ex) {
+                    HospitalException erro = new EquipeMedicaException("Erro inesperado ao filtrar equipe: " + ex.getMessage(), ex, CodigoErro.SIS_001.getCodigo());
+                    LogExcecao.mostrarErroUsuario(erro, filtroFrame);
+                }
+            });
+
+            btnFechar.addActionListener(e -> filtroFrame.dispose());
+
+            comboFiltro.setSelectedIndex(0);
+
+            filtroFrame.setLocationRelativeTo(frame);
+            filtroFrame.setVisible(true);
+
+        } catch (Exception e) {
+            HospitalException erro = new EquipeMedicaException("Erro inesperado ao listar equipe: " + e.getMessage(), e, CodigoErro.SIS_001.getCodigo());
+            if (frame != null) {
+                LogExcecao.mostrarErroUsuario(erro, frame);
+            } else {
+                LogExcecao.logarExcecao(erro);
+            }
+        }
+    }
