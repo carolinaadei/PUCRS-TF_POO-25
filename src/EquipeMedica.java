@@ -3,13 +3,11 @@ public class EquipeMedica extends Pessoa {
     private String registroProfissional;
     private String especialidade;
 
-    public EquipeMedica(String nome, String dataNasc, int idade, String cpf, char sexo,
-                        String email, String endereco, String telefone, String cargo,
-                        String registroProfissional, String especialidade) {
+    public EquipeMedica(String nome, String dataNasc, int idade, String cpf, char sexo, String email, String endereco, String telefone, String cargo, String registroProfissional, String especialidade) {
         super(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone);
-        this.cargo = cargo;
-        this.registroProfissional = registroProfissional;
-        this.especialidade = especialidade;
+        this.cargo = this.cargo;
+        this.registroProfissional = this.registroProfissional;
+        this.especialidade = this.especialidade;
     }
 
     public void setCargo(String cargo) {

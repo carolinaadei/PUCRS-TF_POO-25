@@ -3,12 +3,15 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 
 public class App {
+    private Collection<Paciente> pacientes = new LinkedHashSet<>();
+    private Collection<EquipeMedica> equipe = new LinkedHashSet<>();
+    private Estatistica estatistica = new Estatistica();
 
-    private ArrayList<Paciente> pacientes = new ArrayList<>();
-    private static ArrayList<EquipeMedica> listaEquipe = new ArrayList<>();
-    private ItemHospitalar itemHospitalar;
     private static JFrame frame;
     private JTable tabela;
     private DefaultTableModel modeloTabela;
@@ -123,7 +126,7 @@ public class App {
                 .toLowerCase();
     }
 
-    private void atualizarTabela(ArrayList<Paciente> lista) {
+    private void atualizarTabela(Collection<Paciente> lista) {
         modeloTabela.setRowCount(0);
         for (Paciente p : lista) {
             String tipo = (p instanceof Internado) ? "Internado" : "Ambulatorial";
@@ -135,64 +138,64 @@ public class App {
     }
 
     private void cadastrarPaciente() {
-        String nome = JOptionPane.showInputDialog(frame, "Nome do paciente:");
+        String nome = JOptionPane.showInputDialog(null, "Nome do paciente:");
         if (nome == null || nome.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Nome é obrigatório!");
+            JOptionPane.showMessageDialog(null, "Nome é obrigatório!");
             return;
         }
 
-        String dataNasc = JOptionPane.showInputDialog(frame, "Data de nascimento (dd/mm/aaaa):");
+        String dataNasc = JOptionPane.showInputDialog(null, "Data de nascimento (dd/mm/aaaa):");
         if (dataNasc == null || dataNasc.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Data de nascimento é obrigatória!");
+            JOptionPane.showMessageDialog(null, "Data de nascimento é obrigatória!");
             return;
         }
 
         int idade;
         try {
-            String idadeStr = JOptionPane.showInputDialog(frame, "Idade:");
+            String idadeStr = JOptionPane.showInputDialog(null, "Idade:");
             if (idadeStr == null || idadeStr.trim().isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "Idade é obrigatória!");
+                JOptionPane.showMessageDialog(null, "Idade é obrigatória!");
                 return;
             }
             idade = Integer.parseInt(idadeStr);
             if (idade < 0 || idade > 150) {
-                JOptionPane.showMessageDialog(frame, "Idade deve estar entre 0 e 150 anos!");
+                JOptionPane.showMessageDialog(null, "Idade deve estar entre 0 e 150 anos!");
                 return;
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Idade inválida!");
+            JOptionPane.showMessageDialog(null, "Idade inválida!");
             return;
         }
 
-        String cpf = JOptionPane.showInputDialog(frame, "CPF:");
+        String cpf = JOptionPane.showInputDialog(null, "CPF:");
         if (cpf == null || cpf.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "CPF é obrigatório!");
+            JOptionPane.showMessageDialog(null, "CPF é obrigatório!");
             return;
         }
 
-        String sexoStr = JOptionPane.showInputDialog(frame, "Sexo (M/F):");
+        String sexoStr = JOptionPane.showInputDialog(null, "Sexo (M/F):");
         if (sexoStr == null || sexoStr.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Sexo é obrigatório!");
+            JOptionPane.showMessageDialog(null, "Sexo é obrigatório!");
             return;
         }
         char sexo = sexoStr.toUpperCase().charAt(0);
         if (sexo != 'M' && sexo != 'F') {
-            JOptionPane.showMessageDialog(frame, "Sexo deve ser M ou F!");
+            JOptionPane.showMessageDialog(null, "Sexo deve ser M ou F!");
             return;
         }
 
-        String email = JOptionPane.showInputDialog(frame, "E-mail:");
+        String email = JOptionPane.showInputDialog(null, "E-mail:");
         if (email == null) email = "";
 
-        String endereco = JOptionPane.showInputDialog(frame, "Endereço:");
+        String endereco = JOptionPane.showInputDialog(null, "Endereço:");
         if (endereco == null) endereco = "";
 
-        String telefone = JOptionPane.showInputDialog(frame, "Telefone:");
+        String telefone = JOptionPane.showInputDialog(null, "Telefone:");
         if (telefone == null) telefone = "";
 
-        String diagnostico = JOptionPane.showInputDialog(frame, "Diagnóstico:");
+        String diagnostico = JOptionPane.showInputDialog(null, "Diagnóstico:");
         if (diagnostico == null || diagnostico.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Diagnóstico é obrigatório!");
+            JOptionPane.showMessageDialog(null, "Diagnóstico é obrigatório!");
             return;
         }
 
@@ -203,42 +206,42 @@ public class App {
         if (nomeItem == null) nomeItem = "";
 
         String[] opcoes = {"Ambulatorial", "Internado"};
-        int tipo = JOptionPane.showOptionDialog(frame, "Tipo de paciente", "Tipo",
+        int tipo = JOptionPane.showOptionDialog(null, "Tipo de paciente", "Tipo",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
                 null, opcoes, opcoes[0]);
 
         if (tipo == 0) {
             int qntConsultas;
             try {
-                String consultasStr = JOptionPane.showInputDialog(frame, "Consultas realizadas:");
+                String consultasStr = JOptionPane.showInputDialog(null, "Consultas realizadas:");
                 if (consultasStr == null || consultasStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Número de consultas é obrigatório!");
+                    JOptionPane.showMessageDialog(null, "Número de consultas é obrigatório!");
                     return;
                 }
                 qntConsultas = Integer.parseInt(consultasStr);
                 if (qntConsultas < 0) {
-                    JOptionPane.showMessageDialog(frame, "Número de consultas não pode ser negativo!");
+                    JOptionPane.showMessageDialog(null, "Número de consultas não pode ser negativo!");
                     return;
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Número de consultas inválido!");
+                JOptionPane.showMessageDialog(null, "Número de consultas inválido!");
                 return;
             }
 
             double custoConsulta;
             try {
-                String custoStr = JOptionPane.showInputDialog(frame, "Valor por consulta:");
+                String custoStr = JOptionPane.showInputDialog(null, "Valor por consulta:");
                 if (custoStr == null || custoStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Valor da consulta é obrigatório!");
+                    JOptionPane.showMessageDialog(null, "Valor da consulta é obrigatório!");
                     return;
                 }
                 custoConsulta = Double.parseDouble(custoStr);
                 if (custoConsulta < 0) {
-                    JOptionPane.showMessageDialog(frame, "Valor da consulta não pode ser negativo!");
+                    JOptionPane.showMessageDialog(null, "Valor da consulta não pode ser negativo!");
                     return;
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Valor da consulta inválido!");
+                JOptionPane.showMessageDialog(null, "Valor da consulta inválido!");
                 return;
             }
 
@@ -247,35 +250,35 @@ public class App {
         } else if (tipo == 1) {
             int diasInternado;
             try {
-                String diasStr = JOptionPane.showInputDialog(frame, "Dias internado:");
+                String diasStr = JOptionPane.showInputDialog(null, "Dias internado:");
                 if (diasStr == null || diasStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Número de dias é obrigatório!");
+                    JOptionPane.showMessageDialog(null, "Número de dias é obrigatório!");
                     return;
                 }
                 diasInternado = Integer.parseInt(diasStr);
                 if (diasInternado < 0) {
-                    JOptionPane.showMessageDialog(frame, "Número de dias não pode ser negativo!");
+                    JOptionPane.showMessageDialog(null, "Número de dias não pode ser negativo!");
                     return;
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Número de dias inválido!");
+                JOptionPane.showMessageDialog(null, "Número de dias inválido!");
                 return;
             }
 
             double custoDiario;
             try {
-                String custoStr = JOptionPane.showInputDialog(frame, "Valor da diária:");
+                String custoStr = JOptionPane.showInputDialog(null, "Valor da diária:");
                 if (custoStr == null || custoStr.trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Valor da diária é obrigatório!");
+                    JOptionPane.showMessageDialog(null, "Valor da diária é obrigatório!");
                     return;
                 }
                 custoDiario = Double.parseDouble(custoStr);
                 if (custoDiario < 0) {
-                    JOptionPane.showMessageDialog(frame, "Valor da diária não pode ser negativo!");
+                    JOptionPane.showMessageDialog(null, "Valor da diária não pode ser negativo!");
                     return;
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(frame, "Valor da diária inválido!");
+                JOptionPane.showMessageDialog(null, "Valor da diária inválido!");
                 return;
             }
 
@@ -285,34 +288,48 @@ public class App {
         }
 
         atualizarTabela(pacientes);
-        JOptionPane.showMessageDialog(frame, "Paciente cadastrado com sucesso!");
+        JOptionPane.showMessageDialog(null, "Paciente cadastrado com sucesso!");
     }
 
     private String escolherResponsavel() {
-        if (listaEquipe.isEmpty()) {
+        if (equipe.isEmpty()) {
             listarEquipe();
         }
 
-        String[] nomesEquipe = new String[listaEquipe.size() + 1];
+        ArrayList<EquipeMedica> listaEquipeTemp = new ArrayList<>(equipe);
+        String[] nomesEquipe = new String[listaEquipeTemp.size() + 1];
         nomesEquipe[0] = "Nenhum";
-        for (int i = 0; i < listaEquipe.size(); i++) {
-            nomesEquipe[i + 1] = listaEquipe.get(i).getNome() + " - " + listaEquipe.get(i).getCargo();
+
+        for (int i = 0; i < listaEquipeTemp.size(); i++) {
+            EquipeMedica membro = listaEquipeTemp.get(i);
+            String nome = (membro.getNome() != null) ? membro.getNome() : "Nome não informado";
+            String cargo = (membro.getCargo() != null) ? membro.getCargo() : "Cargo não informado";
+            nomesEquipe[i + 1] = nome;
         }
 
-        String responsavel = (String) JOptionPane.showInputDialog(
-                frame,
-                "Selecione o responsável (opcional):",
-                "Responsável",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                nomesEquipe,
-                nomesEquipe[0]);
+        try {
+            String responsavel = (String) JOptionPane.showInputDialog(
+                    frame,
+                    "Selecione o responsável (opcional):",
+                    "Responsável",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    nomesEquipe,
+                    nomesEquipe[0]);
 
-        if (responsavel != null && responsavel.equals("Nenhum")) {
-            responsavel = "";
+            if (responsavel == null || responsavel.equals("Nenhum")) {
+                return "";
+            }
+
+            return responsavel;
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(frame,
+                    "Erro ao selecionar responsável: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return "";
         }
-
-        return responsavel;
     }
 
     private void removerPaciente() {
@@ -323,10 +340,11 @@ public class App {
         }
 
         String[] nomesPacientes = new String[pacientes.size()];
-        for (int i = 0; i < pacientes.size(); i++) {
-            Paciente p = pacientes.get(i);
+        int i = 0;
+        for (Paciente p : pacientes) {
             String tipo = (p instanceof Internado) ? "Internado" : "Ambulatorial";
             nomesPacientes[i] = p.getNome() + " - " + tipo + " - " + p.getDiagnostico();
+            i++;
         }
 
         String pacienteSelecionado = (String) JOptionPane.showInputDialog(
@@ -421,7 +439,8 @@ public class App {
         escolhaFrame.add(btnEstatisticaDiagnostico);
         escolhaFrame.add(btnEstatisticaDetalhado);
         escolhaFrame.add(btnVoltar);
-        escolhaFrame.setLocationRelativeTo(null);
+
+        escolhaFrame.setLocationRelativeTo(frame);
         escolhaFrame.setVisible(true);
     }
 
@@ -463,7 +482,7 @@ public class App {
         JScrollPane scrollPane = new JScrollPane(tabela);
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        atualizaTabelaTecnica(pacientes, listaEquipe);
+        atualizaTabelaTecnica(pacientes, equipe);
 
         JPanel painelInferior = new JPanel();
         JTextField campoBusca = new JTextField(15);
@@ -512,7 +531,7 @@ public class App {
                         encontrados.add(p);
                     }
                 }
-                atualizaTabelaTecnica(encontrados, listaEquipe);
+                atualizaTabelaTecnica(encontrados, equipe);
             }
         });
     }
@@ -626,7 +645,7 @@ public class App {
             paciente.setNomeItem(itensAtuais + ", " + nomeItem);
         }
 
-        atualizaTabelaTecnica(pacientes, listaEquipe);
+        atualizaTabelaTecnica(pacientes, equipe);
         JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso ao paciente " + paciente.getNome() + ".");
     }
 
@@ -707,8 +726,8 @@ public class App {
             if (confirmacao == JOptionPane.YES_OPTION) {
                 removerItemDoPaciente(paciente, itemSelecionado);
                 gerenciadorFrame.dispose();
-                exibirGerenciadorItens(paciente); // Reabrir com lista atualizada
-                atualizaTabelaTecnica(pacientes, listaEquipe);
+                exibirGerenciadorItens(paciente);
+                atualizaTabelaTecnica(pacientes, equipe);
             }
         });
 
@@ -789,12 +808,12 @@ public class App {
             paciente.setNomeItem(itensAtuais + ", " + nomeItem);
         }
 
-        atualizaTabelaTecnica(pacientes, listaEquipe);
+        atualizaTabelaTecnica(pacientes, equipe);
         JOptionPane.showMessageDialog(frame, "Item '" + nomeItem + "' atribuído com sucesso!");
         exibirGerenciadorItens(paciente);
     }
 
-    private void atualizaTabelaTecnica(ArrayList<Paciente> lista, ArrayList<EquipeMedica> listaEquipe) {
+    private void atualizaTabelaTecnica(Collection<Paciente> lista, Collection<EquipeMedica> listaEquipe) {
         modeloTabela.setRowCount(0);
         for (Paciente p : lista) {
             modeloTabela.addRow(new Object[]{
@@ -881,70 +900,30 @@ public class App {
         }
 
         EquipeMedica novaEquipe = new EquipeMedica(nome, dataNasc, idade, cpf, sexo, email, endereco, telefone, cargo, registroProfissional, especialidade);
-        listaEquipe.add(novaEquipe);
+        equipe.add(novaEquipe);
         JOptionPane.showMessageDialog(frame, "Membro da equipe cadastrado com sucesso!");
     }
+    private void listarEquipe() {
+            equipe.add(new EquipeMedica("Dr. Benjamin Rocha", "15/03/1980", 44, "123.456.789-00", 'M',
+                    "benjaminr@gmail.com", "Rua A, 123", "(11) 99999-1111", "Médico", "CRM 26589", "Pneumologista"));
+            equipe.add(new EquipeMedica("Dra. Cecília Brandão", "05/06/1999", 26, "25698478213", 'F',
+                    "cecibrandao@gmail.com", "Rua B, 568", "(11)99925-7863", "Médico", "CRM 23697", "Geral"));
+            equipe.add(new EquipeMedica("Enf. Lucas Pereira", "10/05/1990", 34, "321.654.987-00", 'M',
+                    "lucas.pereira@hospital.com", "Rua D, 321", "(11) 96666-4444", "Enfermeiro", "COREN 12345", "Enfermeiro Geral"));
+            equipe.add(new EquipeMedica("Enf. Mariana Souza", "03/11/1992", 32, "654.321.987-00", 'F',
+                    "mariana.souza@hospital.com", "Rua E, 456", "(11) 95555-5555", "Enfermeiro", "COREN 54321", "Enfermeiro Pediátrico"));
+            equipe.add(new EquipeMedica("Dr. Felipe Andrade", "18/08/1987", 37, "789.123.456-00", 'M',
+                    "felipe.andrade@hospital.com", "Rua F, 789", "(11) 94444-6666", "Fisioterapeuta", "CREFITO 67890", "Fisioterapia ortopédica"));
+            equipe.add(new EquipeMedica("Dra. Beatriz Lima", "25/12/1982", 42, "159.753.486-00", 'F',
+                    "beatriz.lima@hospital.com", "Rua G, 101", "(11) 93333-7777", "Odontologista", "CRO 24680", "Odontologia Clínica"));
 
-    private static void listarEquipe() {
-        if (listaEquipe.isEmpty()) {
-            listaEquipe.add(new EquipeMedica("Dr. Benjamin Rocha", "15/03/1980", 44, "123.456.789-00", 'M', "benjaminr@gmail.com", "Rua A, 123", "(11) 99999-1111", "Médico", "CRM 26589", "Pneumologista"));
-            listaEquipe.add(new EquipeMedica("Dra. Cecília Brandão", "05/06/1999", 26, "25698478213", 'F', "cecibrandao@gmail.com", "Rua B, 568", "(11)99925-7863", "Médico", "CRM 23697", "Geral"));
-            listaEquipe.add(new EquipeMedica("Enf. Lucas Pereira", "10/05/1990", 34, "321.654.987-00", 'M', "lucas.pereira@hospital.com", "Rua D, 321", "(11) 96666-4444", "Enfermeiro", "COREN 12345", "Enfermeiro Geral"));
-            listaEquipe.add(new EquipeMedica("Enf. Mariana Souza", "03/11/1992", 32, "654.321.987-00", 'F', "mariana.souza@hospital.com", "Rua E, 456", "(11) 95555-5555", "Enfermeiro", "COREN 54321", "Enfermeiro Pediátrico"));
-            listaEquipe.add(new EquipeMedica("Dr. Felipe Andrade", "18/08/1987", 37, "789.123.456-00", 'M', "felipe.andrade@hospital.com", "Rua F, 789", "(11) 94444-6666", "Fisioterapeuta", "CREFITO 67890", "Fisioterapia ortopédica"));
-            listaEquipe.add(new EquipeMedica("Dra. Beatriz Lima", "25/12/1982", 42, "159.753.486-00", 'F', "beatriz.lima@hospital.com", "Rua G, 101", "(11) 93333-7777", "Odontologista", "CRO 24680", "Odontologia Clínica"));
+        StringBuilder lista = new StringBuilder("Equipe Cadastrada:\n\n");
+        for (EquipeMedica membro : equipe) {
+            lista.append("- ").append(membro.getNome())
+                    .append(membro.getCargo())
+                    .append("\n");
         }
 
-        JFrame filtroFrame = new JFrame("Filtrar Equipe Médica");
-        filtroFrame.setSize(500, 400);
-        filtroFrame.setLayout(new BorderLayout());
-
-        String[] opcoes = {"Todos", "Médico", "Enfermeiro", "Outros"};
-        JComboBox<String> comboFiltro = new JComboBox<>(opcoes);
-
-        JButton btnFechar = new JButton("Fechar");
-
-        JPanel painelTopo = new JPanel();
-        painelTopo.add(new JLabel("Filtrar por cargo:"));
-        painelTopo.add(comboFiltro);
-
-        JTextArea areaTexto = new JTextArea();
-        areaTexto.setEditable(false);
-        JScrollPane scroll = new JScrollPane(areaTexto);
-
-        JPanel painelInferior = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        painelInferior.add(btnFechar);
-
-        filtroFrame.add(painelTopo, BorderLayout.NORTH);
-        filtroFrame.add(scroll, BorderLayout.CENTER);
-        filtroFrame.add(painelInferior, BorderLayout.SOUTH);
-
-        comboFiltro.addActionListener(e -> {
-            String filtro = (String) comboFiltro.getSelectedItem();
-            StringBuilder sb = new StringBuilder();
-
-            for (EquipeMedica eq : listaEquipe) {
-                boolean exibir = switch (filtro) {
-                    case "Médico" -> eq.getCargo().equalsIgnoreCase("Médico");
-                    case "Enfermeiro" -> eq.getCargo().equalsIgnoreCase("Enfermeiro");
-                    case "Outros" -> !eq.getCargo().equalsIgnoreCase("Médico") && !eq.getCargo().equalsIgnoreCase("Enfermeiro");
-                    default -> true;
-                };
-
-                if (exibir) {
-                    sb.append(eq.getNome()).append(" - ").append(eq.getEspecialidade())
-                            .append(" (").append(eq.getCargo()).append(")\n");
-                }
-            }
-
-            areaTexto.setText(sb.toString().isEmpty() ? "Nenhum membro encontrado com o filtro selecionado." : sb.toString());
-        });
-
-        btnFechar.addActionListener(e -> filtroFrame.dispose());
-
-        comboFiltro.setSelectedIndex(0);
-
-        filtroFrame.setLocationRelativeTo(frame);
-        filtroFrame.setVisible(true);
+        JOptionPane.showMessageDialog(frame, lista.toString(), "Lista de Equipe Médica", JOptionPane.INFORMATION_MESSAGE);
     }
 }
